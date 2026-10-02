@@ -18,7 +18,16 @@ public class MessagingController : ControllerBase
         _messagingService = messagingService;
     }
 
-    private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid CurrentUserId
+    {
+        get
+        {
+            var claimStr = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                        ?? User.FindFirstValue("sub")
+                        ?? User.FindFirstValue("id");
+            return Guid.TryParse(claimStr, out var id) ? id : Guid.Empty;
+        }
+    }
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? "lawyer";
 
     [HttpGet]

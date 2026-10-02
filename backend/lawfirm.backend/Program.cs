@@ -25,7 +25,7 @@ builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionServ
 // ============================================================================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? builder.Configuration["DATABASE_URL"]
-    ?? "Host=aws-0-ap-south-1.pooler.supabase.com,3.111.105.85,65.0.195.55;Port=5432;Database=postgres;Username=postgres.icfgsgcvnwczrlsonlqf;Password=g!EHB2Hp4qnRt2H;SSL Mode=Require;Trust Server Certificate=true;Command Timeout=30;Pooling=true;";
+    ?? "Host=ep-summer-silence-zayaf3bu.c-2.eu-west-2.aws.neon.tech;Port=5432;Database=lawfirmDB;Username=neondb_owner;Password=npg_PEbRcA48ZoLC;SSL Mode=Require;Trust Server Certificate=true;Command Timeout=30;KeepAlive=15;Pooling=true;";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -34,7 +34,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         npgsqlOptions.CommandTimeout(30);
         npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
         npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
+            maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(5),
             errorCodesToAdd: null);
     });

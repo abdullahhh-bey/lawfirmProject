@@ -18,7 +18,17 @@ public class CasesController : ControllerBase
         _caseService = caseService;
     }
 
-    private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid CurrentUserId
+    {
+        get
+        {
+            var claimStr = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                        ?? User.FindFirstValue("sub")
+                        ?? User.FindFirstValue("id");
+            return Guid.TryParse(claimStr, out var id) ? id : Guid.Empty;
+        }
+    }
+
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? "lawyer";
 
     [HttpGet]
@@ -40,6 +50,10 @@ public class CasesController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             return StatusCode(403, new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error loading case details: {ex.Message}" });
         }
     }
 

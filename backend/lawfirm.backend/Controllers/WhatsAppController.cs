@@ -48,13 +48,13 @@ public class WhatsAppController : ControllerBase
             return BadRequest(new { message = "PhoneNumber and Message are required." });
         }
 
-        var success = await _whatsAppService.SendTextMessageAsync(request.PhoneNumber, request.Message);
+        var (success, resultMsg) = await _whatsAppService.SendTextMessageAsync(request.PhoneNumber, request.Message);
         if (success)
         {
-            return Ok(new { success = true, message = "WhatsApp message sent successfully." });
+            return Ok(new { success = true, message = resultMsg });
         }
 
-        return StatusCode(500, new { success = false, message = "Failed to send WhatsApp message. Check server logs or Green API settings." });
+        return BadRequest(new { success = false, message = resultMsg });
     }
 
     [HttpPost("send-file")]
@@ -66,13 +66,13 @@ public class WhatsAppController : ControllerBase
         }
 
         using var stream = file.OpenReadStream();
-        var success = await _whatsAppService.SendFileAsync(phoneNumber, stream, file.FileName, caption ?? "");
+        var (success, resultMsg) = await _whatsAppService.SendFileAsync(phoneNumber, stream, file.FileName, caption ?? "");
 
         if (success)
         {
-            return Ok(new { success = true, message = "WhatsApp file sent successfully." });
+            return Ok(new { success = true, message = resultMsg });
         }
 
-        return StatusCode(500, new { success = false, message = "Failed to send WhatsApp file. Check server logs or Green API settings." });
+        return BadRequest(new { success = false, message = resultMsg });
     }
 }

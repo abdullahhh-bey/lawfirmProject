@@ -88,7 +88,8 @@ public class TaskReminderBackgroundService : BackgroundService
                 {
                     try
                     {
-                        waSuccess = await whatsAppService.SendTextMessageAsync(lawyer.Phone, messageText);
+                        var (resSuccess, _) = await whatsAppService.SendTextMessageAsync(lawyer.Phone, messageText);
+                        waSuccess = resSuccess;
                     }
                     catch (Exception ex)
                     {

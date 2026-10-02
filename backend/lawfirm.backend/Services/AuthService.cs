@@ -24,6 +24,7 @@ public class AuthService : IAuthService
     {
         var normalizedEmail = request.Email.Trim().ToLower();
         var user = await _context.Users
+            .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail && u.IsActive);
 
         if (user == null)
@@ -76,7 +77,7 @@ public class AuthService : IAuthService
 
     public async Task<UserSessionDto?> GetCurrentUserAsync(Guid userId)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null || !user.IsActive)
             return null;
 

@@ -67,20 +67,20 @@ public class WhatsAppService : IWhatsAppService
         };
     }
 
-    public async Task<bool> SendTextMessageAsync(string phoneNumber, string message)
+    public async Task<(bool Success, string Message)> SendTextMessageAsync(string phoneNumber, string message)
     {
         var (baseUrl, idInstance, tokenInstance) = GetConfig();
         if (string.IsNullOrEmpty(idInstance) || string.IsNullOrEmpty(tokenInstance))
         {
             _logger.LogWarning("[WhatsApp GreenAPI] IdInstance or ApiTokenInstance not configured in appsettings.json. Logged message: {Msg} to {Phone}", message, phoneNumber);
-            return false;
+            return (false, "Green API is not configured yet. Please set IdInstance and ApiTokenInstance in appsettings.json.");
         }
 
         var chatId = FormatChatId(phoneNumber);
         if (string.IsNullOrEmpty(chatId))
         {
             _logger.LogError("[WhatsApp GreenAPI] Invalid phone number provided: {Phone}", phoneNumber);
-            return false;
+            return (false, $"Invalid phone number format: {phoneNumber}");
         }
 
         var url = $"{baseUrl}/waInstance{idInstance}/sendMessage/{tokenInstance}";
@@ -102,33 +102,38 @@ public class WhatsAppService : IWhatsAppService
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("[WhatsApp GreenAPI] Successfully sent message to {ChatId}. Response: {Res}", chatId, responseStr);
-                return true;
+                return (true, "WhatsApp message sent successfully.");
             }
 
             _logger.LogError("[WhatsApp GreenAPI] Failed to send message to {ChatId}. Status: {Status}, Response: {Res}", chatId, response.StatusCode, responseStr);
-            return false;
+            return (false, $"Green API error ({response.StatusCode}): {responseStr}");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "[WhatsApp GreenAPI] Network error sending text message to {Phone}", phoneNumber);
+            return (false, $"Network error connecting to Green API: {ex.Message}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[WhatsApp GreenAPI] Error sending text message to {Phone}", phoneNumber);
-            return false;
+            return (false, $"Error sending WhatsApp message: {ex.Message}");
         }
     }
 
-    public async Task<bool> SendFileAsync(string phoneNumber, Stream fileStream, string fileName, string caption)
+    public async Task<(bool Success, string Message)> SendFileAsync(string phoneNumber, Stream fileStream, string fileName, string caption)
     {
         var (baseUrl, idInstance, tokenInstance) = GetConfig();
         if (string.IsNullOrEmpty(idInstance) || string.IsNullOrEmpty(tokenInstance))
         {
             _logger.LogWarning("[WhatsApp GreenAPI] IdInstance or ApiTokenInstance not configured in appsettings.json. Cannot send file {FileName} to {Phone}.", fileName, phoneNumber);
-            return false;
+            return (false, "Green API is not configured yet. Please set IdInstance and ApiTokenInstance in appsettings.json.");
         }
 
         var chatId = FormatChatId(phoneNumber);
         if (string.IsNullOrEmpty(chatId))
         {
             _logger.LogError("[WhatsApp GreenAPI] Invalid phone number provided for file send: {Phone}", phoneNumber);
-            return false;
+            return (false, $"Invalid phone number format: {phoneNumber}");
         }
 
         var url = $"{baseUrl}/waInstance{idInstance}/sendFileByUpload/{tokenInstance}";
@@ -159,16 +164,21 @@ public class WhatsAppService : IWhatsAppService
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("[WhatsApp GreenAPI] Successfully sent file {FileName} to {ChatId}. Response: {Res}", fileName, chatId, responseStr);
-                return true;
+                return (true, "WhatsApp file sent successfully.");
             }
 
             _logger.LogError("[WhatsApp GreenAPI] Failed to send file to {ChatId}. Status: {Status}, Response: {Res}", chatId, response.StatusCode, responseStr);
-            return false;
+            return (false, $"Green API error ({response.StatusCode}): {responseStr}");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "[WhatsApp GreenAPI] Network error sending file {FileName} to {Phone}", fileName, phoneNumber);
+            return (false, $"Network error connecting to Green API: {ex.Message}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[WhatsApp GreenAPI] Error sending file {FileName} to {Phone}", fileName, phoneNumber);
-            return false;
+            return (false, $"Error sending WhatsApp file: {ex.Message}");
         }
     }
 }
