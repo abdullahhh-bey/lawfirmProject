@@ -7,12 +7,9 @@ namespace lawfirm.backend.Data;
 
 public class AppDbContext : DbContext
 {
-    private readonly ISecurityEncryptionService? _encryptionService;
-
-    public AppDbContext(DbContextOptions<AppDbContext> options, ISecurityEncryptionService? encryptionService = null) 
+    public AppDbContext(DbContextOptions<AppDbContext> options) 
         : base(options)
     {
-        _encryptionService = encryptionService;
     }
 
     public DbSet<User> Users => Set<User>();
@@ -29,16 +26,6 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Layer 2: Column-Level AES-256-GCM Value Converter
-        ValueConverter<string, string>? stringEncrypter = null;
-        if (_encryptionService != null)
-        {
-            stringEncrypter = new ValueConverter<string, string>(
-                v => _encryptionService.Encrypt(v),
-                v => _encryptionService.Decrypt(v) ?? ""
-            );
-        }
-
         // User Configuration
         modelBuilder.Entity<User>(entity =>
         {
@@ -54,26 +41,17 @@ public class AppDbContext : DbContext
             entity.Property(u => u.IsActive).HasDefaultValue(true);
         });
 
-        // Client Configuration (Layer 2: Column Encryption for Phone, Email, Address, Notes)
+        // Client Configuration
         modelBuilder.Entity<Client>(entity =>
         {
             entity.ToTable("Clients");
             entity.HasKey(c => c.Id);
             entity.HasIndex(c => c.Name);
             entity.Property(c => c.Name).HasMaxLength(150).IsRequired();
-
-            var phoneProp = entity.Property(c => c.Phone).HasMaxLength(500).HasDefaultValue("");
-            var emailProp = entity.Property(c => c.Email).HasMaxLength(500).HasDefaultValue("");
-            var addrProp = entity.Property(c => c.Address).HasMaxLength(1000).HasDefaultValue("");
-            var notesProp = entity.Property(c => c.Notes);
-
-            if (stringEncrypter != null)
-            {
-                phoneProp.HasConversion(stringEncrypter);
-                emailProp.HasConversion(stringEncrypter);
-                addrProp.HasConversion(stringEncrypter);
-                notesProp.HasConversion(stringEncrypter);
-            }
+            entity.Property(c => c.Phone).HasMaxLength(500).HasDefaultValue("");
+            entity.Property(c => c.Email).HasMaxLength(500).HasDefaultValue("");
+            entity.Property(c => c.Address).HasMaxLength(1000).HasDefaultValue("");
+            entity.Property(c => c.Notes);
         });
 
         // CaseTypeCounter Configuration
@@ -96,7 +74,7 @@ public class AppDbContext : DbContext
             );
         });
 
-        // CaseRecord Configuration (Layer 2: Column Encryption for PiFieldsJson & Notes)
+        // CaseRecord Configuration
         modelBuilder.Entity<CaseRecord>(entity =>
         {
             entity.ToTable("Cases");
@@ -115,15 +93,8 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Matter).HasMaxLength(255).HasDefaultValue("");
             entity.Property(c => c.FeeAgreed).HasPrecision(18, 2);
             entity.Property(c => c.Status).HasMaxLength(30).HasDefaultValue("Unassigned");
-
-            var piProp = entity.Property(c => c.PiFieldsJson);
-            var caseNotesProp = entity.Property(c => c.Notes);
-
-            if (stringEncrypter != null)
-            {
-                piProp.HasConversion(stringEncrypter);
-                caseNotesProp.HasConversion(stringEncrypter);
-            }
+            entity.Property(c => c.PiFieldsJson);
+            entity.Property(c => c.Notes);
 
             entity.HasOne(c => c.Client)
                 .WithMany(cl => cl.Cases)
@@ -136,7 +107,7 @@ public class AppDbContext : DbContext
                 .UsingEntity("CaseLawyers");
         });
 
-        // CaseTask Configuration (Layer 2: Column Encryption for Confidential Notes)
+        // CaseTask Configuration
         modelBuilder.Entity<CaseTask>(entity =>
         {
             entity.ToTable("Tasks");
@@ -150,12 +121,7 @@ public class AppDbContext : DbContext
 
             entity.Property(t => t.Name).HasMaxLength(255).IsRequired();
             entity.Property(t => t.Status).HasMaxLength(30).HasDefaultValue("Pending");
-
-            var taskNotesProp = entity.Property(t => t.Notes);
-            if (stringEncrypter != null)
-            {
-                taskNotesProp.HasConversion(stringEncrypter);
-            }
+            entity.Property(t => t.Notes);
 
             entity.HasOne(t => t.Case)
                 .WithMany(c => c.Tasks)

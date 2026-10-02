@@ -27,9 +27,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? builder.Configuration["DATABASE_URL"]
     ?? "Host=aws-0-ap-south-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.icfgsgcvnwczrlsonlqf;Password=g!EHB2Hp4qnRt2H;SSL Mode=Require;Trust Server Certificate=true;Command Timeout=30;Pooling=true;";
 
-builder.Services.AddDbContext<AppDbContext>((serviceProvider, options) =>
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    var encryptionService = serviceProvider.GetRequiredService<ISecurityEncryptionService>();
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.CommandTimeout(30);
