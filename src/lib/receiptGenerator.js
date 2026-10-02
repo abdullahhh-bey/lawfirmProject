@@ -1,0 +1,143 @@
+/**
+ * Generates an official Law Firm Payment Receipt image (PNG Blob) using HTML5 Canvas.
+ */
+export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeBalance }) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 1000;
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 800, 1000);
+
+    // Decorative Header Banner
+    const gradient = ctx.createLinearGradient(0, 0, 800, 0);
+    gradient.addColorStop(0, '#1E293B'); // Slate 800
+    gradient.addColorStop(1, '#0F172A'); // Slate 900
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 140);
+
+    // Law Firm Title
+    ctx.fillStyle = '#D97706'; // Gold Accent
+    ctx.font = 'bold 28px "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('CASEWELL LAW CHAMBERS', 40, 50);
+
+    ctx.fillStyle = '#F8FAFC';
+    ctx.font = '14px "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Advocates, Solicitors & Corporate Legal Consultants', 40, 75);
+    ctx.fillText('Phone: +92 300 0000000 | Email: contact@casewell-law.com', 40, 95);
+
+    // Badge
+    ctx.fillStyle = '#3B82F6';
+    ctx.fillRect(600, 35, 160, 30);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('OFFICIAL RECEIPT', 680, 55);
+    ctx.textAlign = 'left';
+
+    // Subheader Bar
+    ctx.fillStyle = '#F1F5F9';
+    ctx.fillRect(0, 140, 800, 50);
+    ctx.fillStyle = '#334155';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText('PAYMENT ACKNOWLEDGEMENT RECEIPT', 40, 172);
+
+    const receiptNo = `REC-${String(Date.now()).slice(-6)}`;
+    const dateStr = new Date(entry.date || Date.now()).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    ctx.fillStyle = '#64748B';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Receipt No: ${receiptNo}`, 760, 162);
+    ctx.fillText(`Date: ${dateStr}`, 760, 180);
+    ctx.textAlign = 'left';
+
+    // Details Box
+    let y = 220;
+
+    function drawRow(label, value, isBold = false) {
+      ctx.fillStyle = '#475569';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(label, 50, y);
+
+      ctx.fillStyle = isBold ? '#0F172A' : '#1E293B';
+      ctx.font = isBold ? 'bold 15px sans-serif' : '14px sans-serif';
+      ctx.fillText(value || '—', 220, y);
+
+      ctx.strokeStyle = '#E2E8F0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(50, y + 10);
+      ctx.lineTo(750, y + 10);
+      ctx.stroke();
+
+      y += 45;
+    }
+
+    drawRow('Client Name', client?.name, true);
+    drawRow('Client Phone', client?.phone || '—');
+    drawRow('Case / File Ref', caseId ? `Case ID: ${caseId}` : 'General Client Ledger', true);
+    drawRow('Account Type', entry.account === 'client' ? 'Client Account (Trust Fund)' : 'Office Account (Professional Fee)');
+    drawRow('Transaction Type', entry.type === 'OUT' ? 'Refund / Disbursement' : 'Payment Received');
+    drawRow('Reference No.', entry.reference || 'N/A');
+    drawRow('Particulars', entry.particulars || 'Legal Professional Services');
+    drawRow('Description', entry.description || 'Payment recorded in firm ledger');
+
+    y += 10;
+
+    // Amount Box
+    ctx.fillStyle = entry.type === 'OUT' ? '#FEF2F2' : '#F0FDF4';
+    ctx.strokeStyle = entry.type === 'OUT' ? '#FCA5A5' : '#86EFAC';
+    ctx.lineWidth = 2;
+    ctx.roundRect ? ctx.roundRect(40, y, 720, 100, 12) : ctx.fillRect(40, y, 720, 100);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = entry.type === 'OUT' ? '#991B1B' : '#166534';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(entry.type === 'OUT' ? 'AMOUNT REFUNDED:' : 'AMOUNT RECEIVED:', 70, y + 40);
+
+    ctx.font = 'bold 32px sans-serif';
+    ctx.fillText(`Rs ${Number(entry.amount || 0).toLocaleString()} /-`, 70, y + 80);
+
+    // Status Summary on Right of Box
+    ctx.fillStyle = '#475569';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'right';
+    if (totalAgreed > 0) {
+      ctx.fillText(`Total Agreed Fee: Rs ${Number(totalAgreed).toLocaleString()}`, 730, y + 40);
+    }
+    ctx.fillText(`Current Office Balance: Rs ${Number(officeBalance || 0).toLocaleString()}`, 730, y + 70);
+    ctx.textAlign = 'left';
+
+    y += 130;
+
+    // Footer & Signature
+    ctx.fillStyle = '#94A3B8';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('This is a computer-generated official receipt issued by Casewell Law Firm CRM.', 50, y + 50);
+
+    // Stamp / Sign Line
+    ctx.strokeStyle = '#64748B';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(550, y + 40);
+    ctx.lineTo(750, y + 40);
+    ctx.stroke();
+
+    ctx.fillStyle = '#334155';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Authorized Signature & Stamp', 650, y + 60);
+
+    // Convert canvas to blob
+    canvas.toBlob((blob) => {
+      resolve({ blob, dataUrl: canvas.toDataURL('image/png'), receiptNo });
+    }, 'image/png');
+  });
+}

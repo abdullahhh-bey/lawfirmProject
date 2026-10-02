@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\backend",
+    "\\backend\\lawfirm.backend",
+    "\\backend\\lawfirm.backend\\DTOs",
+    "\\backend\\lawfirm.backend\\DTOs\\Clients",
+    "\\backend\\lawfirm.backend\\Services"
+  ],
+  "SelectedNode": "\\backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs",
+  "PreviewInSolutionExplorer": false
+}
