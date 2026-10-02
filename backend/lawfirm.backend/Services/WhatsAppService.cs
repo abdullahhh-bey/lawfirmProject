@@ -20,7 +20,7 @@ public class WhatsAppService : IWhatsAppService
 
     private (string baseUrl, string idInstance, string tokenInstance) GetConfig()
     {
-        var baseUrl = (_configuration["GreenApi:ApiUrl"] ?? "https://api.green-api.com").TrimEnd('/');
+        var baseUrl = (_configuration["GreenApi:ApiUrl"] ?? "https://api.greenapi.com").TrimEnd('/');
         var idInstance = (_configuration["GreenApi:IdInstance"] ?? "").Trim();
         var tokenInstance = (_configuration["GreenApi:ApiTokenInstance"] ?? "").Trim();
         return (baseUrl, idInstance, tokenInstance);

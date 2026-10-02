@@ -19,8 +19,11 @@ export default function CasesPage() {
     });
   }, []);
 
-  const clientName = (id) => clients.find(c => c.id === id)?.name || '—';
-  const lawyerName = (id) => lawyers.find(l => l.id === id)?.name || 'Unassigned';
+  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c.name])), [clients]);
+  const lawyerMap = useMemo(() => new Map(lawyers.map(l => [l.id, l.name])), [lawyers]);
+
+  const clientName = (id) => clientMap.get(id) || '—';
+  const lawyerName = (id) => lawyerMap.get(id) || 'Unassigned';
 
   const rows = useMemo(() => {
     let r = cases;
@@ -30,7 +33,7 @@ export default function CasesPage() {
       r = r.filter(c => (c?.caseId || '').toLowerCase().includes(qq) || clientName(c?.clientId).toLowerCase().includes(qq) || (c?.matter || '').toLowerCase().includes(qq));
     }
     return [...r].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-  }, [cases, q, statusFilter, clients]);
+  }, [cases, q, statusFilter, clientMap]);
 
   return (
     <>

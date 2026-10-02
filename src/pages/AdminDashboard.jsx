@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Topbar from '../components/layout/Topbar.jsx';
 import CaseStatus from '../components/cases/CaseStatus.jsx';
@@ -40,9 +40,12 @@ export default function AdminDashboard() {
     return () => { isMounted = false; };
   }, []);
 
+  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c.name])), [clients]);
+  const lawyerMap = useMemo(() => new Map(lawyers.map(l => [l.id, l.name])), [lawyers]);
+
   const count = (status) => cases.filter(c => c.status === status).length;
-  const clientName = (id) => clients.find(c => c.id === id)?.name || '—';
-  const lawyerName = (id) => lawyers.find(l => l.id === id)?.name || 'Unassigned';
+  const clientName = (id) => clientMap.get(id) || '—';
+  const lawyerName = (id) => lawyerMap.get(id) || 'Unassigned';
 
   const in3days = new Date(); in3days.setDate(in3days.getDate() + 3);
   const upcoming = tasks

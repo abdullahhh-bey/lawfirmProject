@@ -25,13 +25,14 @@ builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionServ
 // ============================================================================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? builder.Configuration["DATABASE_URL"]
-    ?? "Host=aws-0-ap-south-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.icfgsgcvnwczrlsonlqf;Password=g!EHB2Hp4qnRt2H;SSL Mode=Require;Trust Server Certificate=true;Command Timeout=30;Pooling=true;";
+    ?? "Host=aws-0-ap-south-1.pooler.supabase.com,3.111.105.85,65.0.195.55;Port=5432;Database=postgres;Username=postgres.icfgsgcvnwczrlsonlqf;Password=g!EHB2Hp4qnRt2H;SSL Mode=Require;Trust Server Certificate=true;Command Timeout=30;Pooling=true;";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.CommandTimeout(30);
+        npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
         npgsqlOptions.EnableRetryOnFailure(
             maxRetryCount: 5,
             maxRetryDelay: TimeSpan.FromSeconds(5),
