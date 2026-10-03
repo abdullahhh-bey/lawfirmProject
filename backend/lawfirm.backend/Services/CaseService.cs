@@ -250,6 +250,15 @@ public class CaseService : ICaseService
         var caseRecord = await _context.Cases.FindAsync(caseId);
         if (caseRecord != null)
         {
+            var notifications = await _context.Notifications
+                .Where(n => n.CaseId == caseId)
+                .ToListAsync();
+
+            if (notifications.Any())
+            {
+                _context.Notifications.RemoveRange(notifications);
+            }
+
             _context.Cases.Remove(caseRecord);
             await _context.SaveChangesAsync();
         }

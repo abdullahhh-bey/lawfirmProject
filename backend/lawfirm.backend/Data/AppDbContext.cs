@@ -219,12 +219,12 @@ public class AppDbContext : DbContext
             entity.HasOne(n => n.Case)
                 .WithMany()
                 .HasForeignKey(n => n.CaseId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(n => n.Task)
                 .WithMany()
                 .HasForeignKey(n => n.TaskId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -178,6 +178,15 @@ public class TaskService : ITaskService
         var task = await _context.Tasks.FindAsync(taskId);
         if (task != null)
         {
+            var notifications = await _context.Notifications
+                .Where(n => n.TaskId == taskId)
+                .ToListAsync();
+
+            if (notifications.Any())
+            {
+                _context.Notifications.RemoveRange(notifications);
+            }
+
             _context.Tasks.Remove(task);
             await _context.SaveChangesAsync();
         }
