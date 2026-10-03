@@ -17,7 +17,7 @@ function getAuthToken() {
 async function request(path, options = {}) {
   const token = getAuthToken();
   const headers = {
-    'Content-Type': 'application/json',
+    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
     ...(options.headers || {}),
   };
 
@@ -88,26 +88,55 @@ export const auth = {
   },
 };
 
-// ---------------- In-Memory Cache (Instant Page Transitions) ----------------
+// ---------------- In-Memory Cache & Request Deduplication ----------------
 const memoryCache = new Map();
+const inFlightRequests = new Map();
 
 export function clearCache(key) {
-  if (key) memoryCache.delete(key);
-  else memoryCache.clear();
+  if (key) {
+    memoryCache.delete(key);
+    inFlightRequests.delete(key);
+  } else {
+    memoryCache.clear();
+    inFlightRequests.clear();
+  }
 }
 
 async function fetchWithCache(key, fetcher) {
   const cached = memoryCache.get(key);
   if (cached !== undefined) {
-    // Return cached memory state instantly, revalidate in background
-    fetcher().then(fresh => {
-      if (fresh !== undefined) memoryCache.set(key, fresh);
-    }).catch(() => {});
+    if (!inFlightRequests.has(key)) {
+      const p = fetcher()
+        .then(fresh => {
+          if (fresh !== undefined) memoryCache.set(key, fresh);
+          inFlightRequests.delete(key);
+          return fresh;
+        })
+        .catch(() => {
+          inFlightRequests.delete(key);
+        });
+      inFlightRequests.set(key, p);
+    }
     return cached;
   }
-  const fresh = await fetcher();
-  memoryCache.set(key, fresh);
-  return fresh;
+
+  if (inFlightRequests.has(key)) {
+    return await inFlightRequests.get(key);
+  }
+
+  const p = fetcher()
+    .then(fresh => {
+      if (fresh !== undefined) memoryCache.set(key, fresh);
+      inFlightRequests.delete(key);
+      return fresh;
+    })
+    .catch(err => {
+      inFlightRequests.delete(key);
+      throw err;
+    });
+
+  inFlightRequests.set(key, p);
+  return await p;
 }
 
 // ---------------- Clients ----------------
@@ -196,8 +225,10 @@ export const cases = {
   },
 
   async get(id) {
-    const c = await request(`/cases/${id}`);
-    return transformCase(c);
+    return await fetchWithCache(`case_${id}`, async () => {
+      const c = await request(`/cases/${id}`);
+      return transformCase(c);
+    });
   },
 
   async create(data) {
@@ -290,8 +321,10 @@ export const cases = {
 // ---------------- Tasks ----------------
 export const tasks = {
   async listByCase(caseId) {
-    const list = (await request(`/tasks?caseId=${caseId}`)) || [];
-    return list.map(transformTask);
+    return await fetchWithCache(`tasks_case_${caseId}`, async () => {
+      const list = (await request(`/tasks?caseId=${caseId}`)) || [];
+      return list.map(transformTask);
+    });
   },
 
   async listForLawyer(lawyerId) {
