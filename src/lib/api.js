@@ -88,52 +88,21 @@ export const auth = {
   },
 };
 
-// ---------------- In-Memory Cache & Request Deduplication ----------------
-const memoryCache = new Map();
+// ---------------- In-Flight Request Deduplication (Prevents Browser Connection Stalls) ----------------
 const inFlightRequests = new Map();
 
-export function clearCache(key) {
-  if (key) {
-    memoryCache.delete(key);
-    inFlightRequests.delete(key);
-  } else {
-    memoryCache.clear();
-    inFlightRequests.clear();
-  }
+export function clearCache() {
+  inFlightRequests.clear();
 }
 
 async function fetchWithCache(key, fetcher) {
-  const cached = memoryCache.get(key);
-  if (cached !== undefined) {
-    if (!inFlightRequests.has(key)) {
-      const p = fetcher()
-        .then(fresh => {
-          if (fresh !== undefined) memoryCache.set(key, fresh);
-          inFlightRequests.delete(key);
-          return fresh;
-        })
-        .catch(() => {
-          inFlightRequests.delete(key);
-        });
-      inFlightRequests.set(key, p);
-    }
-    return cached;
-  }
-
   if (inFlightRequests.has(key)) {
     return await inFlightRequests.get(key);
   }
 
-  const p = fetcher()
-    .then(fresh => {
-      if (fresh !== undefined) memoryCache.set(key, fresh);
-      inFlightRequests.delete(key);
-      return fresh;
-    })
-    .catch(err => {
-      inFlightRequests.delete(key);
-      throw err;
-    });
+  const p = fetcher().finally(() => {
+    inFlightRequests.delete(key);
+  });
 
   inFlightRequests.set(key, p);
   return await p;
@@ -328,8 +297,10 @@ export const tasks = {
   },
 
   async listForLawyer(lawyerId) {
-    const list = (await request('/tasks')) || [];
-    return list.map(transformTask);
+    return await fetchWithCache(`tasks_lawyer_${lawyerId}`, async () => {
+      const list = (await request('/tasks')) || [];
+      return list.map(transformTask);
+    });
   },
 
   async listAll() {

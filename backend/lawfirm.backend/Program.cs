@@ -25,17 +25,17 @@ builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionServ
 // ============================================================================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? builder.Configuration["DATABASE_URL"]
-    ?? "Host=ep-summer-silence-zayaf3bu.c-2.eu-west-2.aws.neon.tech;Port=5432;Database=lawfirmDB;Username=neondb_owner;Password=npg_PEbRcA48ZoLC;SSL Mode=Require;Trust Server Certificate=true;Command Timeout=30;KeepAlive=15;Pooling=true;";
+    ?? "Host=ep-summer-silence-zayaf3bu-pooler.c-2.eu-west-2.aws.neon.tech;Port=5432;Database=lawfirmDB;Username=neondb_owner;Password=npg_PEbRcA48ZoLC;SSL Mode=Require;Trust Server Certificate=true;Timeout=30;Command Timeout=30;KeepAlive=15;No Reset On Close=true;Pooling=true;";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
-        npgsqlOptions.CommandTimeout(30);
+        npgsqlOptions.CommandTimeout(120);
         npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
         npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 3,
-            maxRetryDelay: TimeSpan.FromSeconds(5),
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
             errorCodesToAdd: null);
     });
 });

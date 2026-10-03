@@ -40,14 +40,15 @@ export default function ClientsPage() {
     setSaving(true);
     try {
       if (editing?.id) {
-        await clientsApi.update(editing.id, draft);
+        const updated = await clientsApi.update(editing.id, draft);
+        setClients(prev => prev.map(c => c.id === updated.id ? updated : c));
         showToast('Client updated.');
       } else {
-        await clientsApi.create(draft);
+        const created = await clientsApi.create(draft);
+        setClients(prev => [created, ...prev]);
         showToast('Client created.');
       }
       closeModal();
-      reload();
     } catch (e) {
       showToast(e.message, 'error');
     } finally {

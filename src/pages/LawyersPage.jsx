@@ -41,15 +41,16 @@ export default function LawyersPage() {
     setSaving(true);
     try {
       if (editing?.id) {
-        await lawyersApi.update(editing.id, draft);
+        const updated = await lawyersApi.update(editing.id, draft);
+        setLawyers(prev => prev.map(l => l.id === updated.id ? updated : l));
         showToast('Lawyer updated.');
       } else {
         if (!draft.name.trim() || !draft.email.trim()) { showToast('Name and email are required.', 'error'); setSaving(false); return; }
-        await lawyersApi.create(draft);
+        const created = await lawyersApi.create(draft);
+        setLawyers(prev => [...prev, created]);
         showToast('Lawyer account created.');
       }
       closeModal();
-      reload();
     } catch (e) {
       showToast(e.message, 'error');
     } finally {
@@ -58,16 +59,25 @@ export default function LawyersPage() {
   }
 
   async function toggleActive(lawyer) {
-    await lawyersApi.toggleActive(lawyer.id);
-    showToast(lawyer.active ? 'Lawyer deactivated.' : 'Lawyer activated.');
-    reload();
+    try {
+      const updated = await lawyersApi.toggleActive(lawyer.id);
+      setLawyers(prev => prev.map(l => l.id === updated.id ? updated : l));
+      showToast(lawyer.active ? 'Lawyer deactivated.' : 'Lawyer activated.');
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   }
 
   async function confirmDelete() {
-    await lawyersApi.remove(deleteTarget.id);
-    showToast('Lawyer account deleted.');
-    setDeleteTarget(null);
-    reload();
+    try {
+      await lawyersApi.remove(deleteTarget.id);
+      setLawyers(prev => prev.filter(l => l.id !== deleteTarget.id));
+      showToast('Lawyer account deleted.');
+    } catch (e) {
+      showToast(e.message, 'error');
+    } finally {
+      setDeleteTarget(null);
+    }
   }
 
   return (

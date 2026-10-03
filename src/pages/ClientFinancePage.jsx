@@ -52,10 +52,10 @@ export default function ClientFinancePage() {
     setSaving(true);
     try {
       const created = await financeApi.create(data);
+      setRows(prev => [...prev, created || data]);
       showToast(`${data.type === 'OUT' ? 'Refund' : 'Payment'} recorded.`);
       setShowForm(false);
       setReceiptEntry(created || data);
-      reload();
     } catch (e) {
       showToast(e.message, 'error');
     } finally {
@@ -65,9 +65,13 @@ export default function ClientFinancePage() {
 
   async function removeEntry(row) {
     if (!window.confirm('Remove this ledger entry?')) return;
-    await financeApi.remove(row.id);
-    showToast('Entry removed.');
-    reload();
+    try {
+      await financeApi.remove(row.id);
+      setRows(prev => prev.filter(r => r.id !== row.id));
+      showToast('Entry removed.');
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   }
 
   return (

@@ -60,32 +60,52 @@ export default function CaseDetailsPage() {
   };
 
   async function reassign(newLawyerIds) {
-    await casesApi.assignLawyers(caseRecord.id, newLawyerIds);
-    showToast('Lawyer assignment updated — notifications queued for anyone newly added.');
-    reload();
+    try {
+      const updated = await casesApi.assignLawyers(caseRecord.id, newLawyerIds);
+      setCaseRecord(updated);
+      showToast('Lawyer assignment updated — notifications queued for anyone newly added.');
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   }
 
   async function updateTaskStatus(task, status) {
-    await tasksApi.setStatus(task.id, status);
-    reload();
+    try {
+      const updated = await tasksApi.setStatus(task.id, status);
+      setTaskItems(prev => prev.map(t => t.id === updated.id ? updated : t));
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   }
   async function removeTask(_, task) {
-    await tasksApi.remove(task.id);
-    showToast('Task removed.');
-    reload();
+    try {
+      await tasksApi.remove(task.id);
+      setTaskItems(prev => prev.filter(t => t.id !== task.id));
+      showToast('Task removed.');
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   }
   async function saveDraftTask() {
     if (!draftTask.name.trim()) return;
-    await tasksApi.create({ ...draftTask, caseId: caseRecord.id });
-    setDraftTask(null);
-    showToast('Task added.');
-    reload();
+    try {
+      const created = await tasksApi.create({ ...draftTask, caseId: caseRecord.id });
+      setTaskItems(prev => [created, ...prev]);
+      setDraftTask(null);
+      showToast('Task added.');
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   }
   async function addTaskAttachments(task, files) {
     if (!files.length) return;
-    await tasksApi.addAttachments(task.id, files);
-    showToast('File attached to task.');
-    reload();
+    try {
+      const updated = await tasksApi.addAttachments(task.id, files);
+      setTaskItems(prev => prev.map(t => t.id === updated.id ? updated : t));
+      showToast('File attached to task.');
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   }
   async function updateDocuments(newTree) {
     setCaseRecord(cr => ({ ...cr, documents: newTree })); // optimistic, so the UI doesn't flicker while saving
