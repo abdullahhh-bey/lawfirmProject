@@ -71,6 +71,13 @@ export const auth = {
     return session;
   },
 
+  async changePassword(currentPassword, newPassword) {
+    return await request('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
   logout() {
     sessionStorage.removeItem('session');
   },
@@ -88,21 +95,37 @@ export const auth = {
   },
 };
 
-// ---------------- In-Flight Request Deduplication (Prevents Browser Connection Stalls) ----------------
+// ---------------- In-Flight & Short TTL Memory Cache (Prevents Stalled Connection Socket Bottlenecks) ----------------
+const memoryCache = new Map();
 const inFlightRequests = new Map();
 
 export function clearCache() {
+  memoryCache.clear();
   inFlightRequests.clear();
 }
 
-async function fetchWithCache(key, fetcher) {
+async function fetchWithCache(key, fetcher, ttlMs = 5000) {
+  const now = Date.now();
+  if (memoryCache.has(key)) {
+    const cached = memoryCache.get(key);
+    if (now - cached.timestamp < ttlMs) {
+      return cached.data;
+    }
+  }
+
   if (inFlightRequests.has(key)) {
     return await inFlightRequests.get(key);
   }
 
-  const p = fetcher().finally(() => {
-    inFlightRequests.delete(key);
-  });
+  const p = (async () => {
+    try {
+      const data = await fetcher();
+      memoryCache.set(key, { data, timestamp: Date.now() });
+      return data;
+    } finally {
+      inFlightRequests.delete(key);
+    }
+  })();
 
   inFlightRequests.set(key, p);
   return await p;
@@ -115,11 +138,11 @@ export const clients = {
   },
 
   async get(id) {
-    return await request(`/clients/${id}`);
+    return await fetchWithCache(`client_${id}`, async () => await request(`/clients/${id}`));
   },
 
   async create(data) {
-    clearCache('clients');
+    clearCache();
     return await request('/clients', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -127,7 +150,7 @@ export const clients = {
   },
 
   async update(id, data) {
-    clearCache('clients');
+    clearCache();
     return await request(`/clients/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -135,7 +158,7 @@ export const clients = {
   },
 
   async remove(id) {
-    clearCache('clients');
+    clearCache();
     return await request(`/clients/${id}`, {
       method: 'DELETE',
     });
@@ -386,11 +409,11 @@ export const lawyers = {
   },
 
   async get(id) {
-    return await request(`/lawyers/${id}`);
+    return await fetchWithCache(`lawyer_${id}`, async () => await request(`/lawyers/${id}`));
   },
 
   async create(data) {
-    clearCache('lawyers');
+    clearCache();
     return await request('/lawyers', {
       method: 'POST',
       body: JSON.stringify({
@@ -403,7 +426,7 @@ export const lawyers = {
   },
 
   async update(id, data) {
-    clearCache('lawyers');
+    clearCache();
     return await request(`/lawyers/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
@@ -416,14 +439,14 @@ export const lawyers = {
   },
 
   async toggleActive(id) {
-    clearCache('lawyers');
+    clearCache();
     return await request(`/lawyers/${id}/toggle-active`, {
       method: 'PUT',
     });
   },
 
   async remove(id) {
-    clearCache('lawyers');
+    clearCache();
     return await request(`/lawyers/${id}`, {
       method: 'DELETE',
     });
@@ -448,11 +471,14 @@ function transformMessage(m) {
 // ---------------- Messaging ----------------
 export const messaging = {
   async list() {
-    const list = (await request('/messaging')) || [];
-    return list.map(transformMessage);
+    return await fetchWithCache('messaging', async () => {
+      const list = (await request('/messaging')) || [];
+      return list.map(transformMessage);
+    });
   },
 
   async send({ recipientIds, text, attachments }) {
+    clearCache();
     const res = await request('/messaging', {
       method: 'POST',
       body: JSON.stringify({
@@ -465,32 +491,39 @@ export const messaging = {
   },
 
   async markSeen(messageId, lawyerId) {
+    clearCache();
     return await request(`/messaging/${messageId}/seen`, {
       method: 'PUT',
     });
   },
 
   async listForLawyer(lawyerId) {
-    const list = (await request('/messaging')) || [];
-    return list.map(transformMessage);
+    return await fetchWithCache('messaging', async () => {
+      const list = (await request('/messaging')) || [];
+      return list.map(transformMessage);
+    });
   },
 };
 
 // ---------------- Notifications ----------------
 export const notifications = {
   async list() {
-    try {
-      return (await request('/messaging/notifications')) || [];
-    } catch {
-      return [];
-    }
+    return await fetchWithCache('notifications', async () => {
+      try {
+        return (await request('/messaging/notifications')) || [];
+      } catch {
+        return [];
+      }
+    });
   },
   async listForLawyer(lawyerId) {
-    try {
-      return (await request('/messaging/notifications')) || [];
-    } catch {
-      return [];
-    }
+    return await fetchWithCache('notifications', async () => {
+      try {
+        return (await request('/messaging/notifications')) || [];
+      } catch {
+        return [];
+      }
+    });
   },
 };
 

@@ -7,6 +7,7 @@ import TaskList from '../components/tasks/TaskList.jsx';
 import Calendar from '../components/calendar/Calendar.jsx';
 import MessageComposer from '../components/messaging/MessageComposer.jsx';
 import NotificationStatus from '../components/messaging/NotificationStatus.jsx';
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 import { cases as casesApi, clients as clientsApi, lawyers as lawyersApi, tasks as tasksApi, notifications as notificationsApi, finance as financeApi } from '../lib/api.js';
 import { caseTypeByCode } from '../data/nomenclature.js';
 import { useApp } from '../context/AppContext.jsx';
@@ -16,7 +17,7 @@ const newTask = () => ({ name: '', date: '', assignedLawyerIds: [], notes: '', a
 export default function CaseDetailsPage() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { showToast } = useApp();
+  const { showToast, session } = useApp();
 
   const [caseRecord, setCaseRecord] = useState(null);
   const [client, setClient] = useState(null);
@@ -28,28 +29,42 @@ export default function CaseDetailsPage() {
   const [composerFor, setComposerFor] = useState(null);
   const [draftTask, setDraftTask] = useState(null);
   const [archiving, setArchiving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const isAdmin = session?.role === 'admin';
 
   async function reload() {
-    const c = await casesApi.get(id);
-    if (!c) return;
-    setCaseRecord(c);
-    const [cl, ls, ts, ns] = await Promise.all([
-      clientsApi.get(c.clientId), lawyersApi.list(), tasksApi.listByCase(c.id), notificationsApi.list(),
-    ]);
-    setClient(cl); setLawyers(ls); setTaskItems(ts);
-    setNotifs(ns.filter(n => n.caseId === c.id));
-    if (cl) {
-      const ledger = await financeApi.listForClient(cl.id);
-      // Only the Office Account (professional fee money) counts toward "Fee Received" —
-      // Client Account entries are the client's own money held in trust, not fee.
-      const receivedForCase = ledger.filter(r => r.caseId === c.id && (r.account || 'office') === 'office')
-        .reduce((s, r) => s + (r.type === 'OUT' ? -r.amount : r.amount), 0);
-      setFeeReceived(receivedForCase);
+    setLoading(true);
+    try {
+      const c = await casesApi.get(id);
+      if (!c) return;
+      setCaseRecord(c);
+      const [cl, ls, ts, ns] = await Promise.all([
+        clientsApi.get(c.clientId), lawyersApi.list(), tasksApi.listByCase(c.id), notificationsApi.list(),
+      ]);
+      setClient(cl); setLawyers(ls); setTaskItems(ts);
+      setNotifs(ns.filter(n => n.caseId === c.id));
+      if (cl) {
+        const ledger = await financeApi.listForClient(cl.id);
+        const receivedForCase = ledger.filter(r => r.caseId === c.id && (r.account || 'office') === 'office')
+          .reduce((s, r) => s + (r.type === 'OUT' ? -r.amount : r.amount), 0);
+        setFeeReceived(receivedForCase);
+      }
+    } finally {
+      setLoading(false);
     }
   }
+
   useEffect(() => { reload(); }, [id]);
 
-  if (!caseRecord) return <><Topbar /><div className="page">Loading…</div></>;
+  if (loading || !caseRecord) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
+  }
 
   const lawyerName = (lawId) => {
     const found = lawyers.find(l => (l.id || '').toLowerCase() === (lawId || '').toLowerCase());
@@ -77,6 +92,7 @@ export default function CaseDetailsPage() {
       showToast(e.message, 'error');
     }
   }
+
   async function removeTask(_, task) {
     try {
       await tasksApi.remove(task.id);
@@ -86,6 +102,7 @@ export default function CaseDetailsPage() {
       showToast(e.message, 'error');
     }
   }
+
   async function saveDraftTask() {
     if (!draftTask.name.trim()) return;
     try {
@@ -97,6 +114,7 @@ export default function CaseDetailsPage() {
       showToast(e.message, 'error');
     }
   }
+
   async function addTaskAttachments(task, files) {
     if (!files.length) return;
     try {
@@ -107,8 +125,9 @@ export default function CaseDetailsPage() {
       showToast(e.message, 'error');
     }
   }
+
   async function updateDocuments(newTree) {
-    setCaseRecord(cr => ({ ...cr, documents: newTree })); // optimistic, so the UI doesn't flicker while saving
+    setCaseRecord(cr => ({ ...cr, documents: newTree }));
     try {
       await casesApi.setDocuments(caseRecord.id, newTree);
     } catch (e) {
@@ -122,23 +141,43 @@ export default function CaseDetailsPage() {
       return (nodes || []).reduce((s, n) => s + (n.kind === 'folder' ? countFiles(n.children) : 1), 0);
     }
     const docCount = countFiles(caseRecord.documents);
-    const warn = `This will download a ZIP with a PDF summary of case ${caseRecord.caseId} plus all ${docCount} uploaded document${docCount === 1 ? '' : 's'}, then PERMANENTLY DELETE this case from Casewell — it cannot be recovered afterward. Continue?`;
+    const warn = `Archive case ${caseRecord.caseId}? This will download a summary package with ${docCount} document(s) and move the case to the Archived section.`;
     if (!window.confirm(warn)) return;
     setArchiving(true);
     try {
-      // Loaded on demand — jsPDF/JSZip are only needed for this one action,
-      // so they shouldn't bloat the bundle every other page has to load.
       const { downloadCaseArchive } = await import('../lib/archive.js');
       const type = caseTypeByCode(caseRecord.caseTypeCode);
       const lawyerNames = (caseRecord.assignedLawyerIds || []).map(lawyerName);
       await downloadCaseArchive({ caseRecord, client, typeLabel: type?.label || caseRecord.caseTypeCode, lawyerNames, feeReceived });
-      await casesApi.remove(caseRecord.id);
-      showToast(`Case ${caseRecord.caseId} archived and removed.`);
-      nav('/cases');
+      const updated = await casesApi.setStatus(caseRecord.id, 'Archived');
+      setCaseRecord(updated);
+      showToast(`Case ${caseRecord.caseId} moved to Archived.`);
     } catch (e) {
       showToast(e.message || 'Could not archive this case.', 'error');
     } finally {
       setArchiving(false);
+    }
+  }
+
+  async function cancelCase() {
+    if (!window.confirm(`Cancel case ${caseRecord.caseId}? Status will be set to Cancelled.`)) return;
+    try {
+      const updated = await casesApi.setStatus(caseRecord.id, 'Cancelled');
+      setCaseRecord(updated);
+      showToast(`Case ${caseRecord.caseId} status changed to Cancelled.`);
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  async function deleteCase() {
+    if (!window.confirm(`PERMANENTLY DELETE case ${caseRecord.caseId}? This action cannot be undone.`)) return;
+    try {
+      await casesApi.remove(caseRecord.id);
+      showToast(`Case ${caseRecord.caseId} permanently deleted.`);
+      nav('/cases');
+    } catch (e) {
+      showToast(e.message, 'error');
     }
   }
 
@@ -164,7 +203,15 @@ export default function CaseDetailsPage() {
                 Message {lawyerName(lawId)}
               </button>
             ))}
-            <button className="btn btn-danger" onClick={archiveCase} disabled={archiving}>{archiving ? 'Archiving…' : 'Archive Case'}</button>
+            {caseRecord.status !== 'Cancelled' && (
+              <button className="btn btn-secondary" onClick={cancelCase}>Cancel Case</button>
+            )}
+            {caseRecord.status !== 'Archived' && (
+              <button className="btn btn-warning" onClick={archiveCase} disabled={archiving}>{archiving ? 'Archiving…' : 'Archive Case'}</button>
+            )}
+            {isAdmin && (
+              <button className="btn btn-danger" onClick={deleteCase}>Delete Case</button>
+            )}
           </div>
         </div>
 

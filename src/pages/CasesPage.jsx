@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Topbar from '../components/layout/Topbar.jsx';
 import CaseStatus from '../components/cases/CaseStatus.jsx';
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 import { cases as casesApi, clients as clientsApi, lawyers as lawyersApi } from '../lib/api.js';
 import { caseTypeByCode, CASE_STATUSES } from '../data/nomenclature.js';
 
@@ -12,11 +13,15 @@ export default function CasesPage() {
   const [lawyers, setLawyers] = useState([]);
   const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([casesApi.list(), clientsApi.list(), lawyersApi.list()]).then(([c, cl, l]) => {
-      setCases(c); setClients(cl); setLawyers(l);
-    });
+    setLoading(true);
+    Promise.all([casesApi.list(), clientsApi.list(), lawyersApi.list()])
+      .then(([c, cl, l]) => {
+        setCases(c); setClients(cl); setLawyers(l);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c.name])), [clients]);
@@ -27,13 +32,26 @@ export default function CasesPage() {
 
   const rows = useMemo(() => {
     let r = cases;
-    if (statusFilter !== 'all') r = r.filter(c => c.status === statusFilter);
+    if (statusFilter === 'all') {
+      r = r.filter(c => c.status !== 'Archived');
+    } else {
+      r = r.filter(c => c.status === statusFilter);
+    }
     if (q.trim()) {
       const qq = q.toLowerCase();
       r = r.filter(c => (c?.caseId || '').toLowerCase().includes(qq) || clientName(c?.clientId).toLowerCase().includes(qq) || (c?.matter || '').toLowerCase().includes(qq));
     }
     return [...r].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
   }, [cases, q, statusFilter, clientMap]);
+
+  if (loading) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
+  }
 
   return (
     <>
@@ -74,7 +92,7 @@ export default function CasesPage() {
                     <td>{clientName(c.clientId)}</td>
                     <td>{type && <span className={`folder-chip ${type.color}`}>{type.code}</span>}</td>
                     <td>{(c.assignedLawyerIds || []).length ? c.assignedLawyerIds.map(lawyerName).join(', ') : 'Unassigned'}</td>
-                    <td className="mono">{c.openingDate}</td>
+                    <td className="mono">{c.openingDate ? String(c.openingDate).slice(0, 10) : '—'}</td>
                     <td><CaseStatus status={c.status} /></td>
                   </tr>
                 );

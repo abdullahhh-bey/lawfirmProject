@@ -91,6 +91,20 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<(bool Success, string Message)> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null || !user.IsActive)
+            return (false, "User account not found or inactive.");
+
+        if (!VerifyPassword(currentPassword, user.PasswordHash))
+            return (false, "Current password is incorrect.");
+
+        user.PasswordHash = HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+        return (true, "Password changed successfully.");
+    }
+
     public string HashPassword(string password)
     {
         return BCrypt.Net.BCrypt.HashPassword(password);

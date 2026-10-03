@@ -8,6 +8,8 @@ import { cases as casesApi, clients as clientsApi, lawyers as lawyersApi, tasks 
 import { caseTypeByCode } from '../data/nomenclature.js';
 import { useApp } from '../context/AppContext.jsx';
 
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+
 export default function LawyerCaseView() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -19,22 +21,33 @@ export default function LawyerCaseView() {
   const markedSeen = useRef(false);
 
   async function reload() {
-    const c = await casesApi.get(id);
-    if (!c) return;
-    setCaseRecord(c);
-    const [cl, ts, ls] = await Promise.all([clientsApi.get(c.clientId), tasksApi.listByCase(c.id), lawyersApi.list()]);
-    setClient(cl); setTaskItems(ts); setLawyers(ls);
+    try {
+      const c = await casesApi.get(id);
+      if (!c) return;
+      setCaseRecord(c);
+      const [cl, ts, ls] = await Promise.all([clientsApi.get(c.clientId), tasksApi.listByCase(c.id), lawyersApi.list()]);
+      setClient(cl); setTaskItems(ts); setLawyers(ls);
 
-    // "Seen" — opening the case moves Delivered -> Seen, but never auto to In Process.
-    if (c.status === 'Delivered' && !markedSeen.current) {
-      markedSeen.current = true;
-      const updated = await casesApi.setStatus(c.id, 'Seen');
-      setCaseRecord(updated);
+      // "Seen" — opening the case moves Delivered -> Seen, but never auto to In Process.
+      if (c.status === 'Delivered' && !markedSeen.current) {
+        markedSeen.current = true;
+        const updated = await casesApi.setStatus(c.id, 'Seen');
+        setCaseRecord(updated);
+      }
+    } catch (e) {
+      console.warn('Failed to load lawyer case view:', e);
     }
   }
   useEffect(() => { reload(); }, [id]);
 
-  if (!caseRecord) return <><Topbar /><div className="page">Loading…</div></>;
+  if (!caseRecord) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
+  }
   const type = caseTypeByCode(caseRecord.caseTypeCode);
   const lawyerName = (lawId) => lawyers.find(l => l.id === lawId)?.name || 'Unassigned';
 

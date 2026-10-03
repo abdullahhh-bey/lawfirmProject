@@ -6,6 +6,8 @@ import ClientForm from '../components/clients/ClientForm.jsx';
 import { clients as clientsApi, cases as casesApi } from '../lib/api.js';
 import { useApp } from '../context/AppContext.jsx';
 
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+
 export default function ClientsPage() {
   const nav = useNavigate();
   const { showToast } = useApp();
@@ -15,9 +17,13 @@ export default function ClientsPage() {
   const [editing, setEditing] = useState(null); // client object or {} for new
   const [draft, setDraft] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   function reload() {
-    Promise.all([clientsApi.list(), casesApi.list()]).then(([c, cs]) => { setClients(c); setCases(cs); });
+    setLoading(true);
+    Promise.all([clientsApi.list(), casesApi.list()])
+      .then(([c, cs]) => { setClients(c); setCases(cs); })
+      .finally(() => setLoading(false));
   }
   useEffect(reload, []);
 
@@ -54,6 +60,15 @@ export default function ClientsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
   }
 
   return (

@@ -7,6 +7,8 @@ import MessageComposer from '../components/messaging/MessageComposer.jsx';
 import { lawyers as lawyersApi, cases as casesApi, tasks as tasksApi } from '../lib/api.js';
 import { useApp } from '../context/AppContext.jsx';
 
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+
 const emptyLawyer = { name: '', email: '', phone: '', password: 'password' };
 
 export default function LawyersPage() {
@@ -19,9 +21,13 @@ export default function LawyersPage() {
   const [saving, setSaving] = useState(false);
   const [messageTarget, setMessageTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   function reload() {
-    Promise.all([lawyersApi.list(), casesApi.list(), tasksApi.listAll()]).then(([l, c, t]) => { setLawyers(l); setCases(c); setTasks(t); });
+    setLoading(true);
+    Promise.all([lawyersApi.list(), casesApi.list(), tasksApi.listAll()])
+      .then(([l, c, t]) => { setLawyers(l); setCases(c); setTasks(t); })
+      .finally(() => setLoading(false));
   }
   useEffect(reload, []);
 
@@ -78,6 +84,15 @@ export default function LawyersPage() {
     } finally {
       setDeleteTarget(null);
     }
+  }
+
+  if (loading) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
   }
 
   return (

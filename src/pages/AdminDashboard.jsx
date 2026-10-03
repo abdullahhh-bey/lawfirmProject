@@ -5,6 +5,8 @@ import CaseStatus from '../components/cases/CaseStatus.jsx';
 import { cases as casesApi, clients as clientsApi, lawyers as lawyersApi, tasks as tasksApi } from '../lib/api.js';
 import { caseTypeByCode } from '../data/nomenclature.js';
 
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+
 export default function AdminDashboard() {
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
@@ -54,6 +56,15 @@ export default function AdminDashboard() {
     .slice(0, 6);
 
   const recentCases = [...cases].sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')).slice(0, 6);
+
+  if (loading) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
+  }
 
   return (
     <>

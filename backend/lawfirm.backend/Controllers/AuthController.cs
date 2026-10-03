@@ -72,6 +72,25 @@ public class AuthController : ControllerBase
         return Ok(profile);
     }
 
+    // CHANGE PASSWORD ENDPOINT (LAWYER ONLY)
+    [HttpPost("change-password")]
+    [Authorize(Roles = "lawyer")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid token claims." });
+
+        var (success, message) = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+        if (!success)
+            return BadRequest(new { message });
+
+        return Ok(new { message });
+    }
+
     // TEST ENDPOINT FOR ADMIN
     [HttpGet("admin-only-test")]
     [Authorize(Roles = "admin")]

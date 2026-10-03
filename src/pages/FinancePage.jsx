@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Topbar from '../components/layout/Topbar.jsx';
 import { finance as financeApi } from '../lib/api.js';
 
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+
 export default function FinancePage() {
   const nav = useNavigate();
   const [rows, setRows] = useState(null);
@@ -24,6 +26,15 @@ export default function FinancePage() {
       outstanding: list.reduce((s, r) => s + (Number(r.outstanding) || 0), 0),
     };
   }, [rows]);
+
+  if (rows === null) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
+  }
 
   return (
     <>

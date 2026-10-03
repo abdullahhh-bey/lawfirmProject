@@ -25,7 +25,6 @@ public class TaskService : ITaskService
     {
         IQueryable<CaseTask> query = _context.Tasks
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(t => t.Case)
                 .ThenInclude(c => c!.AssignedLawyers)
             .Include(t => t.AssignedLawyers);
@@ -56,7 +55,6 @@ public class TaskService : ITaskService
     {
         var task = await _context.Tasks
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(t => t.Case)
                 .ThenInclude(c => c!.AssignedLawyers)
             .Include(t => t.AssignedLawyers)

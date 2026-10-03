@@ -9,6 +9,8 @@ import ClientPaymentReminderModal from '../components/clients/ClientPaymentRemin
 import { clients as clientsApi, cases as casesApi, finance as financeApi } from '../lib/api.js';
 import { useApp } from '../context/AppContext.jsx';
 
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+
 export default function ClientFinancePage() {
   const { clientId } = useParams();
   const nav = useNavigate();
@@ -33,7 +35,14 @@ export default function ClientFinancePage() {
   }
   useEffect(() => { reload(); }, [clientId]);
 
-  if (!client) return <><Topbar /><div className="page">Loading…</div></>;
+  if (!client) {
+    return (
+      <>
+        <Topbar />
+        <LoadingSpinner text="Hold on, Data is coming for you" />
+      </>
+    );
+  }
 
   const officeRows = rows.filter(r => (r.account || 'office') === 'office');
   const clientRows = rows.filter(r => r.account === 'client');

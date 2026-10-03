@@ -29,7 +29,7 @@ export const PI_EXTRA_FIELDS = [
   { key: 'hire', label: 'Hire' },
 ];
 
-export const CASE_STATUSES = ['Unassigned', 'Assigned', 'Delivered', 'Seen', 'In Process', 'Completed'];
+export const CASE_STATUSES = ['Unassigned', 'Assigned', 'In Process', 'Completed', 'Cancelled', 'Archived'];
 export const TASK_STATUSES = ['Pending', 'Assigned', 'Delivered', 'Seen', 'In Process', 'Completed'];
 
 export function statusToClass(status) {

@@ -126,10 +126,19 @@ tr.clickable:hover{ background:var(--surface-2); cursor:pointer; }
 .badge.seen{ background:rgba(198,161,91,.15); color:var(--accent); }
 .badge.inprocess{ background:rgba(232,163,61,.15); color:var(--amber); }
 .badge.completed{ background:rgba(62,207,142,.15); color:var(--green); }
+.badge.cancelled{ background:rgba(232,99,93,.15); color:var(--red); }
+.badge.archived{ background:rgba(160,118,249,.15); color:#a076f9; }
 .badge.pending{ background:rgba(139,145,152,.15); color:var(--text-muted); }
 .badge.sent{ background:rgba(79,163,227,.15); color:var(--blue); }
 .badge.active{ background:rgba(62,207,142,.15); color:var(--green); }
 .badge.inactive{ background:rgba(232,99,93,.15); color:var(--red); }
+
+/* ---------- Loading Spinner ---------- */
+.spinner-container{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; width:100%; text-align:center; min-height:220px; }
+.spinner-ring{ width:44px; height:44px; border-radius:50%; border:3.5px solid var(--line); border-top-color:var(--accent); border-right-color:var(--accent); animation:spin 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; margin-bottom:14px; box-shadow:0 0 15px rgba(198,161,91,0.25); }
+.spinner-text{ font-size:12.5px; font-weight:600; color:var(--text-muted); letter-spacing:0.02em; animation:pulse 1.8s ease-in-out infinite; }
+@keyframes spin{ 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
+@keyframes pulse{ 0%,100%{ opacity:0.6; } 50%{ opacity:1; } }
 .folder-chip{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:3px 9px; border-radius:6px; }
 .folder-chip.green{ background:rgba(62,207,142,.15); color:var(--green); }
 .folder-chip.yellow{ background:rgba(216,194,74,.15); color:var(--yellow); }

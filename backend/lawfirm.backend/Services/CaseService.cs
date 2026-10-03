@@ -25,7 +25,6 @@ public class CaseService : ICaseService
     {
         IQueryable<CaseRecord> query = _context.Cases
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(c => c.Client)
             .Include(c => c.AssignedLawyers);
 
@@ -47,7 +46,6 @@ public class CaseService : ICaseService
     {
         var caseRecord = await _context.Cases
             .AsNoTracking()
-            .AsSplitQuery()
             .Include(c => c.Client)
             .Include(c => c.AssignedLawyers)
             .FirstOrDefaultAsync(c => c.Id == caseId);
@@ -250,13 +248,21 @@ public class CaseService : ICaseService
         var caseRecord = await _context.Cases.FindAsync(caseId);
         if (caseRecord != null)
         {
+            var tasks = await _context.Tasks.Where(t => t.CaseId == caseId).ToListAsync();
+            var taskIds = tasks.Select(t => t.Id).ToList();
+
             var notifications = await _context.Notifications
-                .Where(n => n.CaseId == caseId)
+                .Where(n => (n.CaseId != null && n.CaseId == caseId) || (n.TaskId != null && taskIds.Contains(n.TaskId.Value)))
                 .ToListAsync();
 
             if (notifications.Any())
             {
                 _context.Notifications.RemoveRange(notifications);
+            }
+
+            if (tasks.Any())
+            {
+                _context.Tasks.RemoveRange(tasks);
             }
 
             _context.Cases.Remove(caseRecord);
