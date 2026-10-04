@@ -3,6 +3,21 @@
   "WorkspaceRootPath": "Z:\\lawfirm-crm\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Controllers\\DocumentsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\Controllers\\DocumentsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Controllers\\AuthController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\Controllers\\AuthController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -33,10 +48,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -46,7 +57,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -59,19 +70,42 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "AuthService.cs",
-              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Services\\AuthService.cs",
-              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Services\\AuthService.cs",
-              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Services\\AuthService.cs",
-              "RelativeToolTip": "backend\\lawfirm.backend\\Services\\AuthService.cs",
-              "ViewState": "AgIAAFEAAAAAAAAAAAAAAFEAAAAAAAAAAAAAAA==",
+              "Title": "plan-fix-client-creation-length-mismatch.md [Preview]",
+              "DocumentMoniker": "C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md",
+              "ToolTip": "C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md [Preview]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-10-02T11:33:44.21Z",
+              "EditorCaption": " [Preview]"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ClientDtos.cs",
+              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs",
+              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs",
+              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs",
+              "RelativeToolTip": "backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAYwDEAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-25T20:03:57.236Z",
+              "WhenOpened": "2026-10-02T11:30:33.006Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
+              "Title": "DocumentsController.cs",
+              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Controllers\\DocumentsController.cs",
+              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Controllers\\DocumentsController.cs",
+              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Controllers\\DocumentsController.cs",
+              "RelativeToolTip": "backend\\lawfirm.backend\\Controllers\\DocumentsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-02T11:27:35.075Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "LoginRequestDto.cs",
               "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Auth\\LoginRequestDto.cs",
               "RelativeDocumentMoniker": "backend\\lawfirm.backend\\DTOs\\Auth\\LoginRequestDto.cs",
@@ -79,25 +113,24 @@
               "RelativeToolTip": "backend\\lawfirm.backend\\DTOs\\Auth\\LoginRequestDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-25T19:59:47.167Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-25T19:59:47.167Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "AuthController.cs",
               "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Controllers\\AuthController.cs",
               "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Controllers\\AuthController.cs",
               "RelativeToolTip": "backend\\lawfirm.backend\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAsAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-25T19:59:42.082Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 8,
               "Title": "DbInitializer.cs",
               "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Data\\DbInitializer.cs",
               "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Data\\DbInitializer.cs",
@@ -105,64 +138,11 @@
               "RelativeToolTip": "backend\\lawfirm.backend\\Data\\DbInitializer.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACcAAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-25T19:57:09.149Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "AppDbContext.cs",
-              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Data\\AppDbContext.cs",
-              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Data\\AppDbContext.cs",
-              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Data\\AppDbContext.cs",
-              "RelativeToolTip": "backend\\lawfirm.backend\\Data\\AppDbContext.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAAABsAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-25T19:56:53.387Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-25T19:57:09.149Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "AuthResponseDto.cs",
-              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
-              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
-              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
-              "RelativeToolTip": "backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAcAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-25T19:56:47.904Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "User.cs",
-              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Models\\User.cs",
-              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Models\\User.cs",
-              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Models\\User.cs",
-              "RelativeToolTip": "backend\\lawfirm.backend\\Models\\User.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-25T19:56:04.224Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\appsettings.json",
-              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\appsettings.json",
-              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\appsettings.json",
-              "RelativeToolTip": "backend\\lawfirm.backend\\appsettings.json",
-              "ViewState": "AgIAABQAAAAAAAAAAAAAAB0AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-09-25T16:35:35.37Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
               "Title": "Program.cs",
               "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Program.cs",
               "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Program.cs",
@@ -172,6 +152,70 @@
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-25T16:13:36.46Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AuthService.cs",
+              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Services\\AuthService.cs",
+              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Services\\AuthService.cs",
+              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Services\\AuthService.cs",
+              "RelativeToolTip": "backend\\lawfirm.backend\\Services\\AuthService.cs",
+              "ViewState": "AgIAAFEAAAAAAAAAAAAAAFEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-25T20:03:57.236Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Data\\AppDbContext.cs",
+              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "backend\\lawfirm.backend\\Data\\AppDbContext.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAAABsAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-25T19:56:53.387Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AuthResponseDto.cs",
+              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
+              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
+              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
+              "RelativeToolTip": "backend\\lawfirm.backend\\DTOs\\Auth\\AuthResponseDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-25T19:56:47.904Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "User.cs",
+              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Models\\User.cs",
+              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Models\\User.cs",
+              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Models\\User.cs",
+              "RelativeToolTip": "backend\\lawfirm.backend\\Models\\User.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-25T19:56:04.224Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\appsettings.json",
+              "RelativeDocumentMoniker": "backend\\lawfirm.backend\\appsettings.json",
+              "ToolTip": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\appsettings.json",
+              "RelativeToolTip": "backend\\lawfirm.backend\\appsettings.json",
+              "ViewState": "AgIAABQAAAAAAAAAAAAAAB0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-09-25T16:35:35.37Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{56df62a4-05a3-4e5b-aa1a-99371ccfb997}"
             }
           ]
         }

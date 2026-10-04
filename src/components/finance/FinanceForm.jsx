@@ -12,9 +12,20 @@ export default function FinanceForm({ client, cases, onClose, onSave, saving }) 
   const selectedCase = cases.find(c => c.id === draft.caseId);
 
   async function submit() {
-    if (!draft.amount || Number(draft.amount) <= 0) { setError('Enter an amount greater than zero.'); return; }
+    const amount = Number(draft.amount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError('Enter an amount greater than zero.');
+      return;
+    }
+
     setError('');
-    await onSave({ ...draft, clientId: client.id });
+
+    await onSave({
+      ...draft,
+      amount,
+      clientId: client.id,
+    });
   }
 
   return (

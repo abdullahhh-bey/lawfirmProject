@@ -59,14 +59,71 @@ export default function ClientFinancePage() {
 
   async function saveEntry(data) {
     setSaving(true);
+
     try {
       const created = await financeApi.create(data);
-      setRows(prev => [...prev, created || data]);
-      showToast(`${data.type === 'OUT' ? 'Refund' : 'Payment'} recorded.`);
+
+      const rawEntry = created || data;
+
+      const amount = Number(rawEntry.amount ?? 0);
+
+      const sameLedgerRows = rows.filter((r) => {
+        const sameAccount =
+          (r.account || 'office') ===
+          (rawEntry.account || 'office');
+
+        const sameCase =
+          (r.caseId || '') ===
+          (rawEntry.caseId || '');
+
+        return sameAccount && sameCase;
+      });
+
+      const previousBalance =
+        sameLedgerRows.length > 0
+          ? Number(
+            sameLedgerRows[
+              sameLedgerRows.length - 1
+            ].balance ?? 0
+          )
+          : 0;
+
+      const delta =
+        rawEntry.type === 'OUT'
+          ? -amount
+          : amount;
+
+      const apiBalance = Number(
+        rawEntry.balance
+      );
+
+      const normalizedEntry = {
+        ...rawEntry,
+
+        amount,
+
+        balance: Number.isFinite(apiBalance)
+          ? apiBalance
+          : previousBalance + delta,
+      };
+
+      setRows((prev) => [
+        ...prev,
+        normalizedEntry,
+      ]);
+
+      showToast(
+        `${normalizedEntry.type === 'OUT' ? 'Refund' : 'Payment'} recorded.`
+      );
+
       setShowForm(false);
-      setReceiptEntry(created || data);
+
+      setReceiptEntry(normalizedEntry);
     } catch (e) {
-      showToast(e.message, 'error');
+      showToast(
+        e.message || 'Failed to record payment.',
+        'error'
+      );
     } finally {
       setSaving(false);
     }

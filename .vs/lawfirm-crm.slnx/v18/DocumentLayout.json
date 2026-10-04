@@ -3,15 +3,15 @@
   "WorkspaceRootPath": "Z:\\lawfirm-crm\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}|MarkdownSecurePreview"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\lawfirm.backend\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Controllers\\DocumentsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -57,7 +57,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -70,16 +70,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "plan-fix-client-creation-length-mismatch.md [Preview]",
-              "DocumentMoniker": "C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md",
-              "ToolTip": "C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md [Preview]",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2026-10-02T11:33:44.21Z",
-              "EditorCaption": " [Preview]"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
               "Title": "ClientDtos.cs",
               "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs",
               "RelativeDocumentMoniker": "backend\\lawfirm.backend\\DTOs\\Clients\\ClientDtos.cs",
@@ -100,8 +90,7 @@
               "RelativeToolTip": "backend\\lawfirm.backend\\Controllers\\DocumentsController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-10-02T11:27:35.075Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-10-02T11:27:35.075Z"
             },
             {
               "$type": "Document",
@@ -125,8 +114,7 @@
               "RelativeToolTip": "backend\\lawfirm.backend\\Controllers\\AuthController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-09-25T19:59:42.082Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-09-25T19:59:42.082Z"
             },
             {
               "$type": "Document",
@@ -142,7 +130,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "Z:\\lawfirm-crm\\backend\\lawfirm.backend\\Program.cs",
               "RelativeDocumentMoniker": "backend\\lawfirm.backend\\Program.cs",
@@ -152,6 +140,16 @@
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-09-25T16:13:36.46Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "plan-fix-client-creation-length-mismatch.md [Preview]",
+              "DocumentMoniker": "C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md",
+              "ToolTip": "C:\\Users\\Laptop Wala\\.copilot\\plans\\plan-fix-client-creation-length-mismatch.md [Preview]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-10-02T11:33:44.21Z",
+              "EditorCaption": " [Preview]"
             },
             {
               "$type": "Document",
@@ -212,10 +210,6 @@
               "ViewState": "AgIAABQAAAAAAAAAAAAAAB0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2026-09-25T16:35:35.37Z"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{56df62a4-05a3-4e5b-aa1a-99371ccfb997}"
             }
           ]
         }
