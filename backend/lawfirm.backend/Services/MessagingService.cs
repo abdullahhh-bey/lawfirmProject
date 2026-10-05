@@ -78,6 +78,36 @@ public class MessagingService : IMessagingService
         return (await GetMessagesAsync(senderId, "admin")).First(m => m.Id == message.Id);
     }
 
+    public async Task<MessageDto> SetMessageAttachmentsAsync(Guid messageId, string attachmentsJson, Guid currentUserId, string role)
+    {
+        var message = await _context.Messages
+            .Include(m => m.Sender)
+            .Include(m => m.Recipients)
+            .FirstOrDefaultAsync(m => m.Id == messageId);
+
+        if (message == null) throw new KeyNotFoundException("Message not found.");
+
+        if (role != "admin" && message.SenderId != currentUserId && !message.Recipients.Any(r => r.RecipientId == currentUserId))
+        {
+            throw new UnauthorizedAccessException("You are not authorized to update attachments for this message.");
+        }
+
+        message.AttachmentsJson = attachmentsJson ?? "[]";
+        await _context.SaveChangesAsync();
+
+        return new MessageDto
+        {
+            Id = message.Id,
+            SenderId = message.SenderId,
+            SenderName = message.Sender?.FullName ?? "Admin",
+            Type = message.Type,
+            Text = message.Text,
+            AttachmentsJson = message.AttachmentsJson,
+            CreatedAt = message.CreatedAt,
+            RecipientStatus = message.Recipients.ToDictionary(r => r.RecipientId, r => r.Status)
+        };
+    }
+
     public async Task MarkMessageSeenAsync(Guid messageId, Guid lawyerId)
     {
         var recipient = await _context.MessageRecipients

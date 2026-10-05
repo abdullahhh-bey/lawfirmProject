@@ -9,5 +9,6 @@ public interface ITaskService
     Task<TaskDto> CreateTaskAsync(CreateTaskDto dto);
     Task<TaskDto> UpdateTaskAsync(Guid taskId, UpdateTaskDto dto, Guid currentUserId, string role);
     Task<TaskDto> SetTaskStatusAsync(Guid taskId, string status, Guid currentUserId, string role);
+    Task<TaskDto> SetTaskAttachmentsAsync(Guid taskId, string attachmentsJson, Guid currentUserId, string role);
     Task DeleteTaskAsync(Guid taskId);
 }

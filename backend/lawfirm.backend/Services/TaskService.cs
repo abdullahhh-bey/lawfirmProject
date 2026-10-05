@@ -36,7 +36,7 @@ public class TaskService : ITaskService
 
         if (role != "admin")
         {
-            query = query.Where(t => 
+            query = query.Where(t =>
                 t.AssignedLawyers.Any(l => l.Id == currentUserId) ||
                 (t.Case != null && t.Case.AssignedLawyers.Any(l => l.Id == currentUserId))
             );
@@ -62,7 +62,7 @@ public class TaskService : ITaskService
 
         if (task == null) return null;
 
-        if (role != "admin" && 
+        if (role != "admin" &&
             !task.AssignedLawyers.Any(l => l.Id == currentUserId) &&
             !(task.Case != null && task.Case.AssignedLawyers.Any(l => l.Id == currentUserId)))
         {
@@ -112,7 +112,7 @@ public class TaskService : ITaskService
 
         if (task == null) throw new KeyNotFoundException("Task not found.");
 
-        if (role != "admin" && 
+        if (role != "admin" &&
             !task.AssignedLawyers.Any(l => l.Id == currentUserId) &&
             !(task.Case != null && task.Case.AssignedLawyers.Any(l => l.Id == currentUserId)))
         {
@@ -151,7 +151,7 @@ public class TaskService : ITaskService
 
         if (task == null) throw new KeyNotFoundException("Task not found.");
 
-        if (role != "admin" && 
+        if (role != "admin" &&
             !task.AssignedLawyers.Any(l => l.Id == currentUserId) &&
             !(task.Case != null && task.Case.AssignedLawyers.Any(l => l.Id == currentUserId)))
         {
@@ -165,6 +165,30 @@ public class TaskService : ITaskService
         }
 
         task.Status = status;
+        task.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return MapToDto(task);
+    }
+
+    public async Task<TaskDto> SetTaskAttachmentsAsync(Guid taskId, string attachmentsJson, Guid currentUserId, string role)
+    {
+        var task = await _context.Tasks
+            .Include(t => t.Case)
+                .ThenInclude(c => c!.AssignedLawyers)
+            .Include(t => t.AssignedLawyers)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
+
+        if (task == null) throw new KeyNotFoundException("Task not found.");
+
+        if (role != "admin" &&
+            !task.AssignedLawyers.Any(l => l.Id == currentUserId) &&
+            !(task.Case != null && task.Case.AssignedLawyers.Any(l => l.Id == currentUserId)))
+        {
+            throw new UnauthorizedAccessException("You are not authorized to update attachments for this task.");
+        }
+
+        task.AttachmentsJson = attachmentsJson ?? "[]";
         task.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 

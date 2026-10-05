@@ -3,7 +3,7 @@ using lawfirm.backend.Services;
 
 namespace lawfirm.backend.Services;
 
-public class SupabaseStorageService : ISupabaseStorageService
+public class SupabaseStorageService : IStorageService
 {
     private readonly Client _client;
     private readonly string _bucketName;
@@ -11,7 +11,7 @@ public class SupabaseStorageService : ISupabaseStorageService
     private readonly ILogger<SupabaseStorageService> _logger;
 
     public SupabaseStorageService(
-        IConfiguration configuration, 
+        IConfiguration configuration,
         ISecurityEncryptionService encryptionService,
         ILogger<SupabaseStorageService> logger)
     {

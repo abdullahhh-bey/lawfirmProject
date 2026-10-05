@@ -3,7 +3,7 @@ using Amazon.S3.Model;
 
 namespace lawfirm.backend.Services;
 
-public class CloudflareR2StorageService : ISupabaseStorageService
+public class CloudflareR2StorageService : IStorageService
 {
     private readonly IAmazonS3 _s3Client;
     private readonly string _bucketName;
@@ -18,13 +18,13 @@ public class CloudflareR2StorageService : ISupabaseStorageService
         _encryptionService = encryptionService;
         _logger = logger;
 
-        var accessKey = configuration["CloudflareR2:AccessKeyId"] 
+        var accessKey = configuration["CloudflareR2:AccessKeyId"]
             ?? throw new InvalidOperationException("CloudflareR2:AccessKeyId is missing.");
-        var secretKey = configuration["CloudflareR2:SecretAccessKey"] 
+        var secretKey = configuration["CloudflareR2:SecretAccessKey"]
             ?? throw new InvalidOperationException("CloudflareR2:SecretAccessKey is missing.");
-        var serviceUrl = configuration["CloudflareR2:ServiceUrl"] 
+        var serviceUrl = configuration["CloudflareR2:ServiceUrl"]
             ?? throw new InvalidOperationException("CloudflareR2:ServiceUrl is missing.");
-        
+
         _bucketName = configuration["CloudflareR2:BucketName"] ?? "lawfirm-case-documents";
 
         var config = new AmazonS3Config
@@ -47,6 +47,11 @@ public class CloudflareR2StorageService : ISupabaseStorageService
             // Client-side AES-256 Encryption before upload
             var encryptedBytes = _encryptionService.EncryptBytes(plainBytes);
 
+            if (encryptedBytes.Length == 0)
+            {
+                throw new InvalidOperationException("Cannot upload an empty encrypted file.");
+            }
+
             using var encryptedStream = new MemoryStream(encryptedBytes);
 
             var putRequest = new PutObjectRequest
@@ -54,8 +59,16 @@ public class CloudflareR2StorageService : ISupabaseStorageService
                 BucketName = _bucketName,
                 Key = pathInBucket,
                 InputStream = encryptedStream,
-                ContentType = contentType
+                ContentType = contentType,
+
+                // Cloudflare R2 rejects the AWS trailer-based chunked SigV4 payload
+                // used by the default streaming upload path. Disabling chunked upload
+                // encoding and payload signing keeps the request compatible with
+                // S3-compatible object storage backends.
+                UseChunkEncoding = false,
+                DisablePayloadSigning = true
             };
+            putRequest.Headers.ContentLength = encryptedBytes.LongLength;
 
             await _s3Client.PutObjectAsync(putRequest);
 

@@ -3,7 +3,7 @@
 // ================================================================
 import { CASE_TYPES, caseTypeByCode } from '../data/nomenclature.js';
 
-const API_BASE_URL = 'http://localhost:5067/api';
+export const API_BASE_URL = 'http://localhost:5067/api';
 
 function getAuthToken() {
   try {
@@ -14,12 +14,17 @@ function getAuthToken() {
   }
 }
 
+function isFormData(value) {
+  return typeof FormData !== 'undefined' && value instanceof FormData;
+}
+
 async function request(path, options = {}) {
   const token = getAuthToken();
-  const headers = {
-    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-    ...(options.headers || {}),
-  };
+  const headers = { ...(options.headers || {}) };
+
+  if (options.body && !isFormData(options.body)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -170,7 +175,14 @@ function transformCase(c) {
   if (!c) return c;
   let documents = [];
   try {
-    documents = typeof c.documentsJson === 'string' ? JSON.parse(c.documentsJson) : (c.documents || []);
+    const parsedDocuments = typeof c.documentsJson === 'string' ? JSON.parse(c.documentsJson) : c.documents;
+    documents = Array.isArray(parsedDocuments)
+      ? parsedDocuments.map((node) =>
+          node && !node.kind && node.storagePath
+            ? { ...node, kind: 'file' }
+            : node,
+        )
+      : [];
   } catch {
     documents = [];
   }
@@ -187,11 +199,53 @@ function transformCase(c) {
   };
 }
 
+function normalizeAttachmentMetadata(attachment) {
+  if (!attachment || typeof attachment !== 'object') return null;
+
+  const normalized = {
+    id: attachment.id || `att_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`,
+    name: attachment.name || attachment.fileName || 'attachment',
+    mimeType: attachment.mimeType || attachment.type || 'application/octet-stream',
+    size: Number(attachment.size || 0),
+  };
+
+  if (attachment.storagePath) normalized.storagePath = attachment.storagePath;
+  if (attachment.createdAt) normalized.createdAt = attachment.createdAt;
+  if (attachment.parentId) normalized.parentId = attachment.parentId;
+  if (attachment.url) normalized.url = attachment.url;
+  if (attachment.dataUrl) normalized.dataUrl = attachment.dataUrl;
+
+  return normalized;
+}
+
+function sanitizeAttachmentList(items = []) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map(normalizeAttachmentMetadata)
+    .filter(Boolean);
+}
+
+function sanitizeDocumentTree(nodes = []) {
+  if (!Array.isArray(nodes)) return [];
+  return nodes
+    .filter((node) => node && typeof node === 'object')
+    .map((node) => {
+      const safeNode = { ...node };
+      delete safeNode.dataUrl;
+      delete safeNode.rawFile;
+      delete safeNode.file;
+      if (Array.isArray(node.children)) {
+        safeNode.children = sanitizeDocumentTree(node.children);
+      }
+      return safeNode;
+    });
+}
+
 function transformTask(t) {
   if (!t) return t;
   let attachments = [];
   try {
-    attachments = typeof t.attachmentsJson === 'string' ? JSON.parse(t.attachmentsJson) : (t.attachments || []);
+    attachments = typeof t.attachmentsJson === 'string' ? sanitizeAttachmentList(JSON.parse(t.attachmentsJson)) : sanitizeAttachmentList(t.attachments || []);
   } catch {
     attachments = [];
   }
@@ -223,10 +277,37 @@ export const cases = {
     });
   },
 
+  async uploadDocument(caseId, file, folderId = null) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = getAuthToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const folderQuery = folderId ? `?folderId=${encodeURIComponent(folderId)}` : '';
+    const res = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/upload${folderQuery}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      let errMessage = 'Failed to upload document.';
+      try {
+        const data = await res.json();
+        errMessage = data.message || errMessage;
+      } catch {}
+      throw new Error(errMessage);
+    }
+
+    return await res.json();
+  },
+
   async create(data) {
     clearCache('cases');
-    const docs = data.documents || [];
-    const docsJson = typeof docs === 'string' ? docs : JSON.stringify(docs);
+    const docsJson = JSON.stringify(sanitizeDocumentTree(data.documents || []));
     const res = await request('/cases', {
       method: 'POST',
       body: JSON.stringify({
@@ -276,12 +357,20 @@ export const cases = {
 
   async setDocuments(id, documents) {
     clearCache('cases');
-    const docsJson = typeof documents === 'string' ? documents : JSON.stringify(documents || []);
+    const docsJson = typeof documents === 'string'
+      ? JSON.stringify(sanitizeDocumentTree(JSON.parse(documents)))
+      : JSON.stringify(sanitizeDocumentTree(documents || []));
     const res = await request(`/cases/${id}/documents`, {
       method: 'PUT',
       body: JSON.stringify({ documentsJson: docsJson }),
     });
     return transformCase(res);
+  },
+
+  async deleteDocument(caseId, fileId) {
+    return await request(`/cases/${caseId}/documents/${fileId}`, {
+      method: 'DELETE',
+    });
   },
 
   async assignLawyers(id, lawyerIds) {
@@ -348,10 +437,15 @@ export const tasks = {
         date: data.date,
         assignedLawyerIds: data.assignedLawyerIds || (data.assignedLawyerId ? [data.assignedLawyerId] : []),
         notes: data.notes || '',
-        attachmentsJson: JSON.stringify(data.attachments || []),
+        attachmentsJson: '[]',
       }),
     });
-    return transformTask(res);
+    const created = transformTask(res);
+    const files = data.attachments || [];
+    for (const file of files) {
+      await this.uploadAttachment(created.id, file.rawFile || file.file || file);
+    }
+    return files.length ? await this.get(created.id) : created;
   },
 
   async update(id, data) {
@@ -363,7 +457,7 @@ export const tasks = {
         date: data.date,
         assignedLawyerIds: data.assignedLawyerIds || [],
         notes: data.notes || '',
-        attachmentsJson: typeof data.attachments === 'string' ? data.attachments : JSON.stringify(data.attachments || []),
+        attachmentsJson: typeof data.attachments === 'string' ? data.attachments : JSON.stringify(sanitizeAttachmentList(data.attachments || [])),
       }),
     });
     return transformTask(res);
@@ -393,12 +487,94 @@ export const tasks = {
     return all.filter(t => (t.date || '').slice(0, 10) === in3Str && !t.reminderSent && t.status !== 'Completed');
   },
 
+  async uploadAttachment(taskId, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = getAuthToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE_URL}/tasks/${taskId}/attachments/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      let errMessage = 'Failed to upload task attachment.';
+      try {
+        const data = await res.json();
+        errMessage = data.message || errMessage;
+      } catch {}
+      throw new Error(errMessage);
+    }
+
+    return await res.json();
+  },
+
+  async downloadAttachment(taskId, attachment) {
+    const legacyUrl = attachment.dataUrl || attachment.url;
+    if (legacyUrl) {
+      const link = document.createElement('a');
+      link.href = legacyUrl;
+      link.download = attachment.name || 'attachment';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+
+    if (!attachment.storagePath) {
+      throw new Error('This attachment has no stored file. Remove it and attach the original file again.');
+    }
+
+    const token = getAuthToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(
+      `${API_BASE_URL}/tasks/${taskId}/attachments/${encodeURIComponent(attachment.id)}/download`,
+      { method: 'GET', credentials: 'include', headers },
+    );
+
+    if (!res.ok) {
+      let errMessage = 'Failed to download task attachment.';
+      try {
+        const data = await res.json();
+        errMessage = data.message || errMessage;
+      } catch {}
+      throw new Error(errMessage);
+    }
+
+    const objectUrl = URL.createObjectURL(await res.blob());
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = attachment.name || 'attachment';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  },
+
   async addAttachments(id, files) {
     clearCache('tasks');
     const current = await this.get(id);
-    const existing = current?.attachments || [];
-    const updated = [...existing, ...files];
+    const existing = sanitizeAttachmentList(current?.attachments || []);
+    const uploaded = [];
+
+    for (const file of files || []) {
+      const uploadedFile = await this.uploadAttachment(id, file.rawFile || file.file || file);
+      uploaded.push(uploadedFile);
+    }
+
+    const updated = [...existing, ...sanitizeAttachmentList(uploaded)];
     return await this.update(id, { ...current, attachments: updated });
+  },
+
+  async deleteAttachment(taskId, attachmentId) {
+    return await request(`/tasks/${taskId}/attachments/${attachmentId}`, {
+      method: 'DELETE',
+    });
   },
 };
 
@@ -457,7 +633,7 @@ function transformMessage(m) {
   if (!m) return m;
   let attachments = [];
   try {
-    attachments = typeof m.attachmentsJson === 'string' ? JSON.parse(m.attachmentsJson) : (m.attachments || []);
+    attachments = typeof m.attachmentsJson === 'string' ? sanitizeAttachmentList(JSON.parse(m.attachmentsJson)) : sanitizeAttachmentList(m.attachments || []);
   } catch {
     attachments = [];
   }
@@ -477,17 +653,54 @@ export const messaging = {
     });
   },
 
+  async uploadAttachment(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = getAuthToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE_URL}/messaging/attachments/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      let errMessage = 'Failed to upload message attachment.';
+      try {
+        const data = await res.json();
+        errMessage = data.message || errMessage;
+      } catch {}
+      throw new Error(errMessage);
+    }
+
+    return await res.json();
+  },
+
   async send({ recipientIds, text, attachments }) {
     clearCache();
+    const sanitizedAttachments = sanitizeAttachmentList(attachments || []).map(({ id, name, mimeType, size, storagePath, createdAt, parentId }) => ({
+      id, name, mimeType, size, ...(storagePath ? { storagePath } : {}), ...(createdAt ? { createdAt } : {}), ...(parentId ? { parentId } : {}),
+    }));
+
     const res = await request('/messaging', {
       method: 'POST',
       body: JSON.stringify({
         recipientIds: recipientIds || [],
         text: text || '',
-        attachmentsJson: JSON.stringify(attachments || []),
+        attachmentsJson: JSON.stringify(sanitizedAttachments),
       }),
     });
     return transformMessage(res);
+  },
+
+  async deleteAttachment(storagePath) {
+    return await request(`/messaging/attachments?storagePath=${encodeURIComponent(storagePath)}`, {
+      method: 'DELETE',
+    });
   },
 
   async markSeen(messageId, lawyerId) {

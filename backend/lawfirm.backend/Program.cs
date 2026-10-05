@@ -27,7 +27,7 @@ var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["DATABASE_URL"]
     ?? throw new InvalidOperationException("Database connection string missing");
-    
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -50,8 +50,8 @@ builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<ILawyerService, LawyerService>();
 
-// Supabase Cloud File Storage (Layer 3 Stream Encrypted) & Task Reminders & WhatsApp
-builder.Services.AddSingleton<ISupabaseStorageService, CloudflareR2StorageService>();
+// Cloudflare R2 object storage for case documents, task attachments, and message attachments.
+builder.Services.AddSingleton<IStorageService, CloudflareR2StorageService>();
 builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
 {
     // Layer 1: Enforce HTTPS policy for outgoing API integrations
@@ -67,7 +67,7 @@ var jwtKey =
     ?? builder.Configuration["JWT_SECRET"]
     ?? throw new InvalidOperationException("JWT secret missing");
 
-    
+
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "LawFirmCrm";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "LawFirmCrmClient";
@@ -116,7 +116,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 // CORS for React Frontend (Vite on :5173)
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? new[] { "http://localhost:5173", "https://localhost:5173" };
 
 builder.Services.AddCors(options =>

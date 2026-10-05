@@ -12,9 +12,9 @@ namespace lawfirm.backend.Controllers;
 public class DocumentsController : ControllerBase
 {
     private readonly ICaseService _caseService;
-    private readonly ISupabaseStorageService _storageService;
+    private readonly IStorageService _storageService;
 
-    public DocumentsController(ICaseService caseService, ISupabaseStorageService storageService)
+    public DocumentsController(ICaseService caseService, IStorageService storageService)
     {
         _caseService = caseService;
         _storageService = storageService;
@@ -42,13 +42,7 @@ public class DocumentsController : ControllerBase
         if (caseRecord == null) return NotFound(new { message = "Case not found." });
 
         var fileId = Guid.NewGuid().ToString("N");
-        var fileExtension = Path.GetExtension(file.FileName);
-        var storagePath = $"{caseRecord.CaseId}/{fileId}_{file.FileName}";
-
-        using var stream = file.OpenReadStream();
-        await _storageService.UploadFileAsync(storagePath, stream, file.ContentType);
-
-        // Parse existing DocumentsJson tree and append new file node
+        var storagePath = $"{caseRecord.CaseId}/{fileId}_{Path.GetFileName(file.FileName)}";
         var docsTree = ParseDocumentsJson(caseRecord.DocumentsJson);
         var newFileNode = new Dictionary<string, object>
         {
@@ -64,9 +58,17 @@ public class DocumentsController : ControllerBase
         if (!string.IsNullOrEmpty(folderId))
         {
             newFileNode["parentId"] = folderId;
+            if (!AddToFolder(docsTree, folderId, newFileNode))
+                return BadRequest(new { message = "The selected folder was not found." });
+        }
+        else
+        {
+            docsTree.Add(newFileNode);
         }
 
-        docsTree.Add(newFileNode);
+        using var stream = file.OpenReadStream();
+        await _storageService.UploadFileAsync(storagePath, stream, file.ContentType);
+
         var updatedJson = JsonSerializer.Serialize(docsTree);
 
         await _caseService.SetCaseDocumentsAsync(caseId, updatedJson);
@@ -81,7 +83,7 @@ public class DocumentsController : ControllerBase
         if (caseRecord == null) return NotFound(new { message = "Case not found." });
 
         var docsTree = ParseDocumentsJson(caseRecord.DocumentsJson);
-        var fileNode = docsTree.FirstOrDefault(d => d.GetValueOrDefault("id")?.ToString() == fileId);
+        var fileNode = FindNode(docsTree, fileId);
 
         if (fileNode == null) return NotFound(new { message = "Document not found." });
 
@@ -113,7 +115,7 @@ public class DocumentsController : ControllerBase
         if (caseRecord == null) return NotFound(new { message = "Case not found." });
 
         var docsTree = ParseDocumentsJson(caseRecord.DocumentsJson);
-        var fileNode = docsTree.FirstOrDefault(d => d.GetValueOrDefault("id")?.ToString() == fileId);
+        var fileNode = FindNode(docsTree, fileId);
 
         if (fileNode != null)
         {
@@ -123,7 +125,7 @@ public class DocumentsController : ControllerBase
                 await _storageService.DeleteFileAsync(storagePath);
             }
 
-            docsTree.Remove(fileNode);
+            RemoveNode(docsTree, fileId);
             var updatedJson = JsonSerializer.Serialize(docsTree);
             await _caseService.SetCaseDocumentsAsync(caseId, updatedJson);
         }
@@ -142,5 +144,71 @@ public class DocumentsController : ControllerBase
         {
             return new();
         }
+    }
+
+    private static Dictionary<string, object>? FindNode(List<Dictionary<string, object>> nodes, string nodeId)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.GetValueOrDefault("id")?.ToString() == nodeId)
+                return node;
+
+            var found = FindNode(GetChildren(node), nodeId);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
+    private static bool AddToFolder(List<Dictionary<string, object>> nodes, string folderId, Dictionary<string, object> fileNode)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.GetValueOrDefault("id")?.ToString() == folderId &&
+                node.GetValueOrDefault("kind")?.ToString() == "folder")
+            {
+                var children = GetChildren(node);
+                children.Add(fileNode);
+                node["children"] = children;
+                return true;
+            }
+
+            var nestedChildren = GetChildren(node);
+            if (AddToFolder(nestedChildren, folderId, fileNode))
+            {
+                node["children"] = nestedChildren;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool RemoveNode(List<Dictionary<string, object>> nodes, string nodeId)
+    {
+        var node = nodes.FirstOrDefault(n => n.GetValueOrDefault("id")?.ToString() == nodeId);
+        if (node != null)
+            return nodes.Remove(node);
+
+        foreach (var parent in nodes)
+        {
+            var children = GetChildren(parent);
+            if (RemoveNode(children, nodeId))
+            {
+                parent["children"] = children;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static List<Dictionary<string, object>> GetChildren(Dictionary<string, object> node)
+    {
+        if (!node.TryGetValue("children", out var value) || value is not JsonElement element || element.ValueKind != JsonValueKind.Array)
+            return new();
+
+        return element.Deserialize<List<Dictionary<string, object>>>() ?? new();
     }
 }

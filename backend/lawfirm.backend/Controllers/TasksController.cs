@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using lawfirm.backend.DTOs.Tasks;
@@ -12,10 +13,12 @@ namespace lawfirm.backend.Controllers;
 public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
+    private readonly IStorageService _storageService;
 
-    public TasksController(ITaskService taskService)
+    public TasksController(ITaskService taskService, IStorageService storageService)
     {
         _taskService = taskService;
+        _storageService = storageService;
     }
 
     private Guid CurrentUserId
@@ -96,6 +99,100 @@ public class TasksController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             return StatusCode(403, new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/attachments/upload")]
+    public async Task<IActionResult> UploadAttachment(Guid id, IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file selected." });
+
+        var task = await _taskService.GetTaskByIdAsync(id, CurrentUserId, CurrentUserRole);
+        if (task == null) return NotFound(new { message = "Task not found." });
+
+        var fileId = Guid.NewGuid().ToString("N");
+        var storagePath = $"tasks/{id}/{fileId}_{Path.GetFileName(file.FileName)}";
+
+        using var stream = file.OpenReadStream();
+        await _storageService.UploadFileAsync(storagePath, stream, file.ContentType);
+
+        var attachments = ParseAttachmentsJson(task.AttachmentsJson);
+        var attachmentNode = new Dictionary<string, object>
+        {
+            ["id"] = fileId,
+            ["name"] = file.FileName,
+            ["mimeType"] = file.ContentType,
+            ["size"] = file.Length,
+            ["storagePath"] = storagePath,
+            ["createdAt"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+        };
+
+        attachments.Add(attachmentNode);
+        await _taskService.SetTaskAttachmentsAsync(id, JsonSerializer.Serialize(attachments), CurrentUserId, CurrentUserRole);
+
+        return Ok(attachmentNode);
+    }
+
+    [HttpGet("{id:guid}/attachments/{fileId}/download")]
+    public async Task<IActionResult> DownloadAttachment(Guid id, string fileId, [FromQuery] bool redirect = false)
+    {
+        var task = await _taskService.GetTaskByIdAsync(id, CurrentUserId, CurrentUserRole);
+        if (task == null) return NotFound(new { message = "Task not found." });
+
+        var attachments = ParseAttachmentsJson(task.AttachmentsJson);
+        var attachmentNode = attachments.FirstOrDefault(d => d.GetValueOrDefault("id")?.ToString() == fileId);
+        if (attachmentNode == null) return NotFound(new { message = "Attachment not found." });
+
+        var storagePath = attachmentNode.GetValueOrDefault("storagePath")?.ToString();
+        var fileName = attachmentNode.GetValueOrDefault("name")?.ToString() ?? "attachment";
+        var mimeType = attachmentNode.GetValueOrDefault("mimeType")?.ToString() ?? "application/octet-stream";
+
+        if (string.IsNullOrEmpty(storagePath))
+            return BadRequest(new { message = "Attachment storage path is missing." });
+
+        if (redirect)
+        {
+            var signedUrl = await _storageService.GetSignedUrlAsync(storagePath, 900);
+            return Redirect(signedUrl);
+        }
+
+        var stream = await _storageService.DownloadFileAsync(storagePath);
+        return File(stream, mimeType, fileName);
+    }
+
+    [HttpDelete("{id:guid}/attachments/{fileId}")]
+    public async Task<IActionResult> DeleteAttachment(Guid id, string fileId)
+    {
+        var task = await _taskService.GetTaskByIdAsync(id, CurrentUserId, CurrentUserRole);
+        if (task == null) return NotFound(new { message = "Task not found." });
+
+        var attachments = ParseAttachmentsJson(task.AttachmentsJson);
+        var attachmentNode = attachments.FirstOrDefault(d => d.GetValueOrDefault("id")?.ToString() == fileId);
+        if (attachmentNode == null) return NotFound(new { message = "Attachment not found." });
+
+        var storagePath = attachmentNode.GetValueOrDefault("storagePath")?.ToString();
+        if (!string.IsNullOrEmpty(storagePath))
+        {
+            await _storageService.DeleteFileAsync(storagePath);
+        }
+
+        attachments.Remove(attachmentNode);
+        await _taskService.SetTaskAttachmentsAsync(id, JsonSerializer.Serialize(attachments), CurrentUserId, CurrentUserRole);
+
+        return NoContent();
+    }
+
+    private static List<Dictionary<string, object>> ParseAttachmentsJson(string json)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(json)) return new();
+            return JsonSerializer.Deserialize<List<Dictionary<string, object>>>(json) ?? new();
+        }
+        catch
+        {
+            return new();
         }
     }
 

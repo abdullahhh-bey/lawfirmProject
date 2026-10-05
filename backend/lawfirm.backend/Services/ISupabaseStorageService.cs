@@ -1,6 +1,6 @@
 namespace lawfirm.backend.Services;
 
-public interface ISupabaseStorageService
+public interface IStorageService
 {
     Task<string> UploadFileAsync(string pathInBucket, Stream fileStream, string contentType);
     Task<Stream> DownloadFileAsync(string pathInBucket);
