@@ -23,10 +23,11 @@ builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionServ
 // LAYER 1: DATABASE CONTEXT & TLS/SSL IN-TRANSIT SECURITY
 // Enforces SSL Mode=Require on Supabase PostgreSQL Connection
 // ============================================================================
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["DATABASE_URL"]
-    ?? "Host=ep-summer-silence-zayaf3bu-pooler.c-2.eu-west-2.aws.neon.tech;Port=5432;Database=lawfirmDB;Username=neondb_owner;Password=npg_PEbRcA48ZoLC;SSL Mode=Require;Trust Server Certificate=true;Timeout=30;Command Timeout=30;KeepAlive=15;No Reset On Close=true;Pooling=true;";
-
+    ?? throw new InvalidOperationException("Database connection string missing");
+    
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -61,10 +62,12 @@ builder.Services.AddHostedService<TaskReminderBackgroundService>();
 // ============================================================================
 // LAYER 4: AUTHENTICATION, JWT SIGNING & HTTPONLY SECURE COOKIE TRANSPORT
 // ============================================================================
-var jwtKey = builder.Configuration["Jwt:Key"] 
-    ?? builder.Configuration["JWT_SECRET"] 
-    ?? "Casewell_LawFirm_SuperSecret_Jwt_SecurityKey_2026_Minimum32Chars!";
+var jwtKey =
+    builder.Configuration["Jwt:Key"]
+    ?? builder.Configuration["JWT_SECRET"]
+    ?? throw new InvalidOperationException("JWT secret missing");
 
+    
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "LawFirmCrm";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "LawFirmCrmClient";
