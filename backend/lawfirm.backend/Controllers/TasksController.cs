@@ -58,8 +58,19 @@ public class TasksController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TaskDto>> CreateTask([FromBody] CreateTaskDto dto)
     {
-        var task = await _taskService.CreateTaskAsync(dto);
-        return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+        try
+        {
+            var task = await _taskService.CreateTaskAsync(dto, CurrentUserId, CurrentUserRole);
+            return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = "Case not found." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -108,7 +119,15 @@ public class TasksController : ControllerBase
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "No file selected." });
 
-        var task = await _taskService.GetTaskByIdAsync(id, CurrentUserId, CurrentUserRole);
+        TaskDto? task;
+        try
+        {
+            task = await _taskService.GetTaskByIdAsync(id, CurrentUserId, CurrentUserRole, requireWritable: true);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
         if (task == null) return NotFound(new { message = "Task not found." });
 
         var fileId = Guid.NewGuid().ToString("N");
@@ -164,7 +183,15 @@ public class TasksController : ControllerBase
     [HttpDelete("{id:guid}/attachments/{fileId}")]
     public async Task<IActionResult> DeleteAttachment(Guid id, string fileId)
     {
-        var task = await _taskService.GetTaskByIdAsync(id, CurrentUserId, CurrentUserRole);
+        TaskDto? task;
+        try
+        {
+            task = await _taskService.GetTaskByIdAsync(id, CurrentUserId, CurrentUserRole, requireWritable: true);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
         if (task == null) return NotFound(new { message = "Task not found." });
 
         var attachments = ParseAttachmentsJson(task.AttachmentsJson);

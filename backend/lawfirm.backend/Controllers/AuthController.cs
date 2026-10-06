@@ -104,6 +104,6 @@ public class AuthController : ControllerBase
     [Authorize(Roles = "lawyer")]
     public IActionResult LawyerOnlyTest()
     {
-        return Ok(new { message = "Access granted. You are authenticated as a Lawyer." });
+        return Ok(new { message = "Access granted. You are authenticated as an Advocate." });
     }
 }

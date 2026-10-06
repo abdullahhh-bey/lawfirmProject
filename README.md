@@ -1,4 +1,4 @@
-# Casewell — Law Firm Case & Client Management (Frontend)
+# Plug Solicitor — Law Firm Case & Client Management (Frontend)
 
 A React frontend for the firm's case/client management system, built on the
 architecture and messaging patterns from the existing admin panel (zone
@@ -14,8 +14,9 @@ npm run build      # production build to dist/
 ```
 
 Demo accounts (see `src/lib/api.js` → `seed()`):
+
 - Admin: `admin@firm.com` / `admin`
-- Lawyer: `s.jennings@firm.com` / `password`
+- Advocate: `s.jennings@firm.com` / `password`
 
 This build ships with a **mock backend** (`src/lib/api.js`) that persists to
 `localStorage` so the whole app works standalone for demos and review. It is
@@ -68,7 +69,7 @@ reassignment), and the Lawyer Portal (Start Working / Mark Completed).
   is an array, edited with the new `MultiLawyerSelector`. Every assigned
   lawyer gets their own assignment notification, sees the task in their
   portal, and can view its attachments. (Case-level assignment stays
-  single-lawyer, per the original spec — only *tasks* support multiple.)
+  single-lawyer, per the original spec — only _tasks_ support multiple.)
 
 These file attachments are stored as base64 in the same mock localStorage
 database as everything else — see the note at the top of `lib/api.js` about
@@ -94,6 +95,7 @@ Case Type = PI, matching how those fields appear only on RTA files today.
 
 Case status: `Unassigned → Assigned → Delivered → Seen → In Process → Completed`
 Task status uses the same set. Rules encoded in `lib/api.js` / page logic:
+
 - Assigning a lawyer moves a case to `Assigned`, then `Delivered` once the
   (simulated) WhatsApp notification succeeds.
 - Opening the case in the Lawyer Portal (`LawyerCaseView.jsx`) moves
@@ -116,6 +118,7 @@ the app open, per the spec.
 
 Every page calls the functions exported from `src/lib/api.js` — never
 `localStorage` directly. To connect a real backend:
+
 1. Replace the body of each function in `api.js` with a `fetch(API_BASE_URL + '/path', ...)`
    call (see the comment at the top of the file for the pattern used in the
    existing admin panel's `js/api.js`).
@@ -128,6 +131,7 @@ Every page calls the functions exported from `src/lib/api.js` — never
 Per the proposal's requirements, the important rule is: **client-side role
 checks (like `ProtectedRoute`) are a UX convenience, not access control.**
 The real backend must:
+
 - Authenticate every request (bearer token) and authorize it per-role/per-assignment
   server-side — a lawyer's token should only ever be able to fetch cases/clients/tasks
   they are assigned to, mirrored here by `cases.listForLawyer()` /

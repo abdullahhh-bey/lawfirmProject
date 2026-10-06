@@ -34,7 +34,9 @@ public class AuthService : IAuthService
             return null;
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+        var jwtKey = _configuration["Jwt:Key"]
+            ?? _configuration["JWT_SECRET"]
+            ?? throw new InvalidOperationException("JWT signing key is not configured.");
         var key = Encoding.UTF8.GetBytes(jwtKey);
         var issuer = _configuration["Jwt:Issuer"] ?? "LawFirmCrm";
         var audience = _configuration["Jwt:Audience"] ?? "LawFirmCrmClient";

@@ -21,6 +21,9 @@ public class CaseService : ICaseService
         return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
     }
 
+    private static bool IsClosedCase(string? status) =>
+        status is "Completed" or "Archived" or "Cancelled";
+
     public async Task<List<CaseDto>> GetCasesAsync(Guid currentUserId, string role, int page = 1, int pageSize = 50)
     {
         IQueryable<CaseRecord> query = _context.Cases
@@ -220,14 +223,30 @@ public class CaseService : ICaseService
             throw new UnauthorizedAccessException("You are not authorized to update status for this case.");
         }
 
+        if (role != "admin" && IsClosedCase(caseRecord.Status))
+        {
+            throw new UnauthorizedAccessException("Completed, archived, or cancelled cases cannot be reopened by an advocate.");
+        }
+
         caseRecord.Status = status;
         caseRecord.UpdatedAt = DateTime.UtcNow;
+
+        if (status is "Archived" or "Completed")
+        {
+            var tasks = await _context.Tasks.Where(task => task.CaseId == caseId).ToListAsync();
+            foreach (var task in tasks)
+            {
+                task.Status = "Completed";
+                task.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return MapToDto(caseRecord);
     }
 
-    public async Task<CaseDto> SetCaseDocumentsAsync(Guid caseId, string documentsJson)
+    public async Task<CaseDto> SetCaseDocumentsAsync(Guid caseId, string documentsJson, Guid currentUserId, string role)
     {
         var caseRecord = await _context.Cases
             .Include(c => c.Client)
@@ -235,6 +254,16 @@ public class CaseService : ICaseService
             .FirstOrDefaultAsync(c => c.Id == caseId);
 
         if (caseRecord == null) throw new KeyNotFoundException("Case not found.");
+
+        if (role != "admin" && !caseRecord.AssignedLawyers.Any(l => l.Id == currentUserId))
+        {
+            throw new UnauthorizedAccessException("You are not authorized to update documents for this case.");
+        }
+
+        if (role != "admin" && IsClosedCase(caseRecord.Status))
+        {
+            throw new UnauthorizedAccessException("Documents cannot be changed on a completed, archived, or cancelled case.");
+        }
 
         caseRecord.DocumentsJson = documentsJson;
         caseRecord.UpdatedAt = DateTime.UtcNow;

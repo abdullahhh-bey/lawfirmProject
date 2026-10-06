@@ -64,7 +64,7 @@ public class LawyerService : ILawyerService
     public async Task<LawyerDto> UpdateLawyerAsync(Guid id, UpdateLawyerDto dto)
     {
         var lawyer = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.Role == "lawyer");
-        if (lawyer == null) throw new KeyNotFoundException("Lawyer not found.");
+        if (lawyer == null) throw new KeyNotFoundException("Advocate not found.");
 
         lawyer.FullName = dto.Name;
         lawyer.Email = dto.Email.Trim().ToLower();
@@ -82,7 +82,7 @@ public class LawyerService : ILawyerService
     public async Task<LawyerDto> ToggleActiveAsync(Guid id)
     {
         var lawyer = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.Role == "lawyer");
-        if (lawyer == null) throw new KeyNotFoundException("Lawyer not found.");
+        if (lawyer == null) throw new KeyNotFoundException("Advocate not found.");
 
         lawyer.IsActive = !lawyer.IsActive;
         lawyer.UpdatedAt = DateTime.UtcNow;

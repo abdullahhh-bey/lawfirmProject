@@ -28,7 +28,7 @@ public class LawyersController : ControllerBase
     public async Task<ActionResult<LawyerDto>> GetLawyerById(Guid id)
     {
         var lawyer = await _lawyerService.GetLawyerByIdAsync(id);
-        if (lawyer == null) return NotFound(new { message = "Lawyer not found." });
+        if (lawyer == null) return NotFound(new { message = "Advocate not found." });
         return Ok(lawyer);
     }
 
@@ -58,7 +58,7 @@ public class LawyersController : ControllerBase
         }
         catch (KeyNotFoundException)
         {
-            return NotFound(new { message = "Lawyer not found." });
+            return NotFound(new { message = "Advocate not found." });
         }
     }
 
@@ -73,7 +73,7 @@ public class LawyersController : ControllerBase
         }
         catch (KeyNotFoundException)
         {
-            return NotFound(new { message = "Lawyer not found." });
+            return NotFound(new { message = "Advocate not found." });
         }
     }
 

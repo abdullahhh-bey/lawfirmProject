@@ -59,7 +59,7 @@ export default function CaseDetails({
           label="Fee Agreed"
           value={
             caseRecord.feeAgreed
-              ? `Rs ${Number(caseRecord.feeAgreed).toLocaleString()}`
+              ? `£ ${Number(caseRecord.feeAgreed).toLocaleString("en-GB")}`
               : "—"
           }
         />
@@ -67,7 +67,7 @@ export default function CaseDetails({
           label="Fee Received"
           value={
             <>
-              {`Rs ${Number(feeReceived || 0).toLocaleString()}`}
+              {`£ ${Number(feeReceived || 0).toLocaleString("en-GB")}`}
               {clientId && (
                 <Link
                   to={`/finance/${clientId}`}
@@ -88,7 +88,7 @@ export default function CaseDetails({
       </div>
 
       <div className="field">
-        <label>Assigned Lawyer(s)</label>
+        <label>Assigned Advocate(s)</label>
         <MultiLawyerSelector
           value={caseRecord.assignedLawyerIds || []}
           onChange={onReassign}

@@ -21,6 +21,9 @@ public class TaskService : ITaskService
         return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
     }
 
+    private static bool IsClosedCase(string? status) =>
+        status is "Completed" or "Archived" or "Cancelled";
+
     public async Task<List<TaskDto>> GetTasksAsync(Guid? caseId, Guid currentUserId, string role, int page = 1, int pageSize = 50)
     {
         IQueryable<CaseTask> query = _context.Tasks
@@ -51,7 +54,7 @@ public class TaskService : ITaskService
         return tasks.Select(MapToDto).ToList();
     }
 
-    public async Task<TaskDto?> GetTaskByIdAsync(Guid taskId, Guid currentUserId, string role)
+    public async Task<TaskDto?> GetTaskByIdAsync(Guid taskId, Guid currentUserId, string role, bool requireWritable = false)
     {
         var task = await _context.Tasks
             .AsNoTracking()
@@ -69,11 +72,32 @@ public class TaskService : ITaskService
             throw new UnauthorizedAccessException("You are not authorized to view this task.");
         }
 
+        if (requireWritable && role != "admin" && IsClosedCase(task.Case?.Status))
+        {
+            throw new UnauthorizedAccessException("Tasks on a completed, archived, or cancelled case cannot be changed.");
+        }
+
         return MapToDto(task);
     }
 
-    public async Task<TaskDto> CreateTaskAsync(CreateTaskDto dto)
+    public async Task<TaskDto> CreateTaskAsync(CreateTaskDto dto, Guid currentUserId, string role)
     {
+        var caseRecord = await _context.Cases
+            .Include(c => c.AssignedLawyers)
+            .FirstOrDefaultAsync(c => c.Id == dto.CaseId);
+
+        if (caseRecord == null) throw new KeyNotFoundException("Case not found.");
+
+        if (role != "admin" && !caseRecord.AssignedLawyers.Any(l => l.Id == currentUserId))
+        {
+            throw new UnauthorizedAccessException("You are not authorized to create tasks for this case.");
+        }
+
+        if (role != "admin" && IsClosedCase(caseRecord.Status))
+        {
+            throw new UnauthorizedAccessException("Tasks cannot be created on a completed, archived, or cancelled case.");
+        }
+
         var task = new CaseTask
         {
             Id = Guid.NewGuid(),
@@ -119,6 +143,11 @@ public class TaskService : ITaskService
             throw new UnauthorizedAccessException("You are not authorized to update this task.");
         }
 
+        if (role != "admin" && IsClosedCase(task.Case?.Status))
+        {
+            throw new UnauthorizedAccessException("Tasks on a completed, archived, or cancelled case cannot be changed.");
+        }
+
         task.Name = dto.Name;
         task.Date = EnsureUtc(dto.Date);
         task.Notes = dto.Notes;
@@ -158,6 +187,11 @@ public class TaskService : ITaskService
             throw new UnauthorizedAccessException("You are not authorized to change status for this task.");
         }
 
+        if (role != "admin" && IsClosedCase(task.Case?.Status))
+        {
+            throw new UnauthorizedAccessException("Tasks on a completed, archived, or cancelled case cannot be changed.");
+        }
+
         var validStatuses = new[] { "Pending", "Assigned", "Delivered", "Seen", "In Process", "Completed" };
         if (!validStatuses.Contains(status))
         {
@@ -186,6 +220,11 @@ public class TaskService : ITaskService
             !(task.Case != null && task.Case.AssignedLawyers.Any(l => l.Id == currentUserId)))
         {
             throw new UnauthorizedAccessException("You are not authorized to update attachments for this task.");
+        }
+
+        if (role != "admin" && IsClosedCase(task.Case?.Status))
+        {
+            throw new UnauthorizedAccessException("Attachments on a completed, archived, or cancelled case cannot be changed.");
         }
 
         task.AttachmentsJson = attachmentsJson ?? "[]";

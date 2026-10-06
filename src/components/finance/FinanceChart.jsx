@@ -1,21 +1,17 @@
-import React from 'react';
+import React from "react";
 
-export default function FinanceChart({
-  rows,
-  caseIdFor,
-}) {
+export default function FinanceChart({ rows, caseIdFor }) {
   if (!rows || rows.length === 0) {
     return (
       <div
         style={{
-          color: 'var(--text-muted)',
+          color: "var(--text-muted)",
           fontSize: 12.5,
-          padding: '30px 0',
-          textAlign: 'center',
+          padding: "30px 0",
+          textAlign: "center",
         }}
       >
-        No payments recorded yet — add one below to see
-        the chart.
+        No payments recorded yet — add one below to see the chart.
       </div>
     );
   }
@@ -29,13 +25,9 @@ export default function FinanceChart({
   const safeRows = rows.map((row) => ({
     ...row,
 
-    amount: Number.isFinite(Number(row.amount))
-      ? Number(row.amount)
-      : 0,
+    amount: Number.isFinite(Number(row.amount)) ? Number(row.amount) : 0,
 
-    balance: Number.isFinite(Number(row.balance))
-      ? Number(row.balance)
-      : 0,
+    balance: Number.isFinite(Number(row.balance)) ? Number(row.balance) : 0,
   }));
 
   /*
@@ -45,8 +37,7 @@ export default function FinanceChart({
   const byCase = new Map();
 
   for (const row of safeRows) {
-    const key =
-      row.caseId || '__general__';
+    const key = row.caseId || "__general__";
 
     if (!byCase.has(key)) {
       byCase.set(key, []);
@@ -63,11 +54,7 @@ export default function FinanceChart({
     byCase
       .get(key)
       .slice()
-      .sort((a, b) =>
-        (a.date || '').localeCompare(
-          b.date || ''
-        )
-      )
+      .sort((a, b) => (a.date || "").localeCompare(b.date || "")),
   );
 
   const W = 640;
@@ -78,63 +65,37 @@ export default function FinanceChart({
   const padT = 14;
   const padB = 28;
 
-  const plotW =
-    W - padL - padR;
+  const plotW = W - padL - padR;
 
-  const plotH =
-    H - padT - padB;
+  const plotH = H - padT - padB;
 
   const maxAmount = Math.max(
     1,
-    ...ordered.map((r) =>
-      Math.abs(Number(r.amount) || 0)
-    )
+    ...ordered.map((r) => Math.abs(Number(r.amount) || 0)),
   );
 
   const maxBalance = Math.max(
     1,
-    ...ordered.map((r) =>
-      Math.abs(Number(r.balance) || 0)
-    )
+    ...ordered.map((r) => Math.abs(Number(r.balance) || 0)),
   );
 
-  const scale = Math.max(
-    maxAmount,
-    maxBalance,
-    1
-  );
+  const scale = Math.max(maxAmount, maxBalance, 1);
 
   const n = ordered.length;
 
-  const slot =
-    n > 0
-      ? plotW / n
-      : plotW;
+  const slot = n > 0 ? plotW / n : plotW;
 
-  const barW = Math.min(
-    28,
-    slot * 0.55
-  );
+  const barW = Math.min(28, slot * 0.55);
 
   const yFor = (value) => {
     const number = Number(value);
 
-    const safeValue =
-      Number.isFinite(number)
-        ? number
-        : 0;
+    const safeValue = Number.isFinite(number) ? number : 0;
 
-    return (
-      padT +
-      plotH -
-      (safeValue / scale) * plotH
-    );
+    return padT + plotH - (safeValue / scale) * plotH;
   };
 
-  const xFor = (index) =>
-    padL +
-    slot * index +
-    slot / 2;
+  const xFor = (index) => padL + slot * index + slot / 2;
 
   /*
    * Separate balance line per case.
@@ -142,18 +103,15 @@ export default function FinanceChart({
   let cursor = 0;
 
   const segments = groups.map((key) => {
-    const entries =
-      byCase.get(key) || [];
+    const entries = byCase.get(key) || [];
 
     const startIndex = cursor;
 
     const points = entries
       .map((row, j) => {
-        const x =
-          xFor(startIndex + j);
+        const x = xFor(startIndex + j);
 
-        const y =
-          yFor(row.balance);
+        const y = yFor(row.balance);
 
         /*
          * Explicit spaces are used between
@@ -161,7 +119,7 @@ export default function FinanceChart({
          */
         return `${x.toFixed(2)},${y.toFixed(2)}`;
       })
-      .join(' ');
+      .join(" ");
 
     cursor += entries.length;
 
@@ -174,13 +132,13 @@ export default function FinanceChart({
   });
 
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: "auto" }}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
         style={{
           minWidth: 480,
-          display: 'block',
+          display: "block",
         }}
       >
         {/* baseline */}
@@ -203,9 +161,7 @@ export default function FinanceChart({
           fontSize="9.5"
           fill="var(--text-muted)"
         >
-          {Math.round(
-            scale
-          ).toLocaleString()}
+          {Math.round(scale).toLocaleString()}
         </text>
 
         <text
@@ -220,87 +176,55 @@ export default function FinanceChart({
 
         {/* case separators */}
 
-        {segments
-          .slice(1)
-          .map((segment) => (
-            <line
-              key={`div_${segment.key}`}
-              x1={
-                padL +
-                slot *
-                segment.startIndex
-              }
-              y1={padT}
-              x2={
-                padL +
-                slot *
-                segment.startIndex
-              }
-              y2={padT + plotH}
-              stroke="var(--line)"
-              strokeDasharray="3,3"
-              strokeWidth="1"
-            />
-          ))}
+        {segments.slice(1).map((segment) => (
+          <line
+            key={`div_${segment.key}`}
+            x1={padL + slot * segment.startIndex}
+            y1={padT}
+            x2={padL + slot * segment.startIndex}
+            y2={padT + plotH}
+            stroke="var(--line)"
+            strokeDasharray="3,3"
+            strokeWidth="1"
+          />
+        ))}
 
         {/* payment bars */}
 
         {ordered.map((row, index) => {
-          const amount =
-            Number(row.amount) || 0;
+          const amount = Number(row.amount) || 0;
 
-          const x =
-            xFor(index) -
-            barW / 2;
+          const x = xFor(index) - barW / 2;
 
-          const y =
-            yFor(amount);
+          const y = yFor(amount);
 
-          const height =
-            padT +
-            plotH -
-            y;
+          const height = padT + plotH - y;
 
-          const color =
-            row.type === 'OUT'
-              ? 'var(--red)'
-              : 'var(--green)';
+          const color = row.type === "OUT" ? "var(--red)" : "var(--green)";
 
-          const caseLabel =
-            row.caseId
-              ? caseIdFor
-                ? caseIdFor(
-                  row.caseId
-                )
-                : row.caseId
-              : 'General';
+          const caseLabel = row.caseId
+            ? caseIdFor
+              ? caseIdFor(row.caseId)
+              : row.caseId
+            : "General";
 
           return (
             <rect
-              key={
-                row.id ??
-                `bar-${index}`
-              }
+              key={row.id ?? `bar-${index}`}
               x={x}
               y={y}
               width={barW}
-              height={Math.max(
-                height,
-                1
-              )}
+              height={Math.max(height, 1)}
               rx="2.5"
               fill={color}
               opacity="0.85"
             >
               <title>
-                {`${caseLabel} · ${row.date || ''
-                  } · ${row.type ===
-                    'OUT'
-                    ? '-'
-                    : '+'
-                  }Rs ${amount.toLocaleString()} · Balance Rs ${Number(
-                    row.balance
-                  ).toLocaleString()}`}
+                {`${caseLabel} · ${row.date || ""} · ${
+                  row.type === "OUT" ? "-" : "+"
+                }£ ${amount.toLocaleString("en-GB")} · Balance £ ${Number(
+                  row.balance,
+                ).toLocaleString("en-GB")}`}
               </title>
             </rect>
           );
@@ -311,9 +235,7 @@ export default function FinanceChart({
         {segments.map((segment) => (
           <polyline
             key={`line_${segment.key}`}
-            points={
-              segment.points
-            }
+            points={segment.points}
             fill="none"
             stroke="var(--accent)"
             strokeWidth="1.75"
@@ -322,51 +244,36 @@ export default function FinanceChart({
 
         {/* balance points */}
 
-        {ordered.map(
-          (row, index) => (
-            <circle
-              key={
-                row.id
-                  ? `d_${row.id}`
-                  : `dot_${index}`
-              }
-              cx={xFor(index)}
-              cy={yFor(
-                row.balance
-              )}
-              r="2.5"
-              fill="var(--accent)"
-            >
-              <title>
-                {`Balance after this entry: Rs ${Number(
-                  row.balance || 0
-                ).toLocaleString()}`}
-              </title>
-            </circle>
-          )
-        )}
+        {ordered.map((row, index) => (
+          <circle
+            key={row.id ? `d_${row.id}` : `dot_${index}`}
+            cx={xFor(index)}
+            cy={yFor(row.balance)}
+            r="2.5"
+            fill="var(--accent)"
+          >
+            <title>
+              {`Balance after this entry: £ ${Number(
+                row.balance || 0,
+              ).toLocaleString("en-GB")}`}
+            </title>
+          </circle>
+        ))}
       </svg>
 
       <div
         style={{
-          display: 'flex',
+          display: "flex",
           gap: 16,
           fontSize: 11,
-          color:
-            'var(--text-muted)',
+          color: "var(--text-muted)",
           marginTop: 8,
-          flexWrap: 'wrap',
+          flexWrap: "wrap",
         }}
       >
-        <Legend
-          swatch="var(--green)"
-          label="Money In"
-        />
+        <Legend swatch="var(--green)" label="Money In" />
 
-        <Legend
-          swatch="var(--red)"
-          label="Money Out"
-        />
+        <Legend swatch="var(--red)" label="Money Out" />
 
         <Legend
           swatch="var(--accent)"
@@ -378,16 +285,12 @@ export default function FinanceChart({
   );
 }
 
-function Legend({
-  swatch,
-  label,
-  line,
-}) {
+function Legend({ swatch, label, line }) {
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
+        display: "flex",
+        alignItems: "center",
         gap: 6,
       }}
     >
@@ -395,8 +298,7 @@ function Legend({
         style={{
           width: 10,
           height: line ? 2 : 10,
-          borderRadius:
-            line ? 0 : 3,
+          borderRadius: line ? 0 : 3,
           background: swatch,
         }}
       />
@@ -405,4 +307,3 @@ function Legend({
     </div>
   );
 }
-

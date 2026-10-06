@@ -10,6 +10,6 @@ public interface ICaseService
     Task<CaseDto> UpdateCaseAsync(Guid caseId, UpdateCaseDto dto, Guid currentUserId, string role);
     Task<CaseDto> AssignLawyersAsync(Guid caseId, List<Guid> lawyerIds);
     Task<CaseDto> SetCaseStatusAsync(Guid caseId, string status, Guid currentUserId, string role);
-    Task<CaseDto> SetCaseDocumentsAsync(Guid caseId, string documentsJson);
+    Task<CaseDto> SetCaseDocumentsAsync(Guid caseId, string documentsJson, Guid currentUserId, string role);
     Task DeleteCaseAsync(Guid caseId);
 }

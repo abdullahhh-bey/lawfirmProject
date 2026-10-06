@@ -69,7 +69,7 @@ export default function TaskCard({
             />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Assigned Lawyer(s) — optional</label>
+            <label>Assigned Advocate(s) — optional</label>
             <MultiLawyerSelector
               value={task.assignedLawyerIds || []}
               onChange={(ids) => onChange({ ...task, assignedLawyerIds: ids })}
@@ -235,23 +235,28 @@ export default function TaskCard({
         </div>
       )}
 
-      {mode === "portal" && task.status !== "Completed" && (
-        <div className="t-actions" style={{ marginTop: 10 }}>
-          {task.status !== "In Process" && (
-            <button className="btn btn-primary btn-sm" onClick={onStartWorking}>
-              Start Working
-            </button>
-          )}
-          {task.status === "In Process" && (
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={() => onStatusChange?.("Completed")}
-            >
-              Mark Completed
-            </button>
-          )}
-        </div>
-      )}
+      {mode === "portal" &&
+        task.status !== "Completed" &&
+        (onStatusChange || onStartWorking) && (
+          <div className="t-actions" style={{ marginTop: 10 }}>
+            {task.status !== "In Process" && (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={onStartWorking}
+              >
+                Start Working
+              </button>
+            )}
+            {task.status === "In Process" && (
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => onStatusChange?.("Completed")}
+              >
+                Mark Completed
+              </button>
+            )}
+          </div>
+        )}
     </div>
   );
 }

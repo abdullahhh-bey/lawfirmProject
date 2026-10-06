@@ -183,9 +183,9 @@ export default function CreateCase() {
         />
 
         <div className="form-section">
-          <h3>2. Lawyer Assignment</h3>
+          <h3>2. Advocate Assignment</h3>
           <div className="section-hint">
-            Optional — a case can be assigned to one or more lawyers now, or
+            Optional — a case can be assigned to one or more advocates now, or
             left unassigned and assigned later.
           </div>
           <div

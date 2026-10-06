@@ -40,6 +40,8 @@ public class DocumentsController : ControllerBase
 
         var caseRecord = await _caseService.GetCaseByIdAsync(caseId, CurrentUserId, CurrentUserRole);
         if (caseRecord == null) return NotFound(new { message = "Case not found." });
+        if (CurrentUserRole != "admin" && (caseRecord.Status is "Completed" or "Archived" or "Cancelled"))
+            return Conflict(new { message = "Documents cannot be changed on a completed, archived, or cancelled case." });
 
         var fileId = Guid.NewGuid().ToString("N");
         var storagePath = $"{caseRecord.CaseId}/{fileId}_{Path.GetFileName(file.FileName)}";
@@ -71,7 +73,7 @@ public class DocumentsController : ControllerBase
 
         var updatedJson = JsonSerializer.Serialize(docsTree);
 
-        await _caseService.SetCaseDocumentsAsync(caseId, updatedJson);
+        await _caseService.SetCaseDocumentsAsync(caseId, updatedJson, CurrentUserId, CurrentUserRole);
 
         return Ok(newFileNode);
     }
@@ -113,6 +115,8 @@ public class DocumentsController : ControllerBase
     {
         var caseRecord = await _caseService.GetCaseByIdAsync(caseId, CurrentUserId, CurrentUserRole);
         if (caseRecord == null) return NotFound(new { message = "Case not found." });
+        if (CurrentUserRole != "admin" && (caseRecord.Status is "Completed" or "Archived" or "Cancelled"))
+            return Conflict(new { message = "Documents cannot be changed on a completed, archived, or cancelled case." });
 
         var docsTree = ParseDocumentsJson(caseRecord.DocumentsJson);
         var fileNode = FindNode(docsTree, fileId);
@@ -127,7 +131,7 @@ public class DocumentsController : ControllerBase
 
             RemoveNode(docsTree, fileId);
             var updatedJson = JsonSerializer.Serialize(docsTree);
-            await _caseService.SetCaseDocumentsAsync(caseId, updatedJson);
+            await _caseService.SetCaseDocumentsAsync(caseId, updatedJson, CurrentUserId, CurrentUserRole);
         }
 
         return NoContent();

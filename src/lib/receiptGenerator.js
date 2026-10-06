@@ -22,12 +22,11 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     // Law Firm Title
     ctx.fillStyle = '#D97706'; // Gold Accent
     ctx.font = 'bold 28px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('CASEWELL LAW CHAMBERS', 40, 50);
+    ctx.fillText('PLUG SOLICITOR', 40, 50);
 
     ctx.fillStyle = '#F8FAFC';
     ctx.font = '14px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Advocates, Solicitors & Corporate Legal Consultants', 40, 75);
-    ctx.fillText('Phone: +92 300 0000000 | Email: contact@casewell-law.com', 40, 95);
+    ctx.fillText('Solicitors & Legal Services', 40, 75);
 
     // Badge
     ctx.fillStyle = '#3B82F6';
@@ -103,16 +102,16 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     ctx.fillText(entry.type === 'OUT' ? 'AMOUNT REFUNDED:' : 'AMOUNT RECEIVED:', 70, y + 40);
 
     ctx.font = 'bold 32px sans-serif';
-    ctx.fillText(`Rs ${Number(entry.amount || 0).toLocaleString()} /-`, 70, y + 80);
+    ctx.fillText(`£ ${Number(entry.amount || 0).toLocaleString('en-GB')}`, 70, y + 80);
 
     // Status Summary on Right of Box
     ctx.fillStyle = '#475569';
     ctx.font = '13px sans-serif';
     ctx.textAlign = 'right';
     if (totalAgreed > 0) {
-      ctx.fillText(`Total Agreed Fee: Rs ${Number(totalAgreed).toLocaleString()}`, 730, y + 40);
+      ctx.fillText(`Total Agreed Fee: £ ${Number(totalAgreed).toLocaleString('en-GB')}`, 730, y + 40);
     }
-    ctx.fillText(`Current Office Balance: Rs ${Number(officeBalance || 0).toLocaleString()}`, 730, y + 70);
+    ctx.fillText(`Current Office Balance: £ ${Number(officeBalance || 0).toLocaleString('en-GB')}`, 730, y + 70);
     ctx.textAlign = 'left';
 
     y += 130;
@@ -120,7 +119,7 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     // Footer & Signature
     ctx.fillStyle = '#94A3B8';
     ctx.font = '12px sans-serif';
-    ctx.fillText('This is a computer-generated official receipt issued by Casewell Law Firm CRM.', 50, y + 50);
+    ctx.fillText('This is a computer-generated official receipt issued by Plug Solicitor.', 50, y + 50);
 
     // Stamp / Sign Line
     ctx.strokeStyle = '#64748B';

@@ -75,6 +75,8 @@ h1,h2,h3,h4{ font-family:var(--font-display); }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
 .btn-primary{ background:var(--accent); color:#181109; }
 .btn-ghost{ background:var(--surface-2); border:1px solid var(--line); color:var(--text); }
+.password-button{ border-color:var(--accent-dim); color:var(--text); }
+.password-button:hover{ border-color:var(--accent); color:var(--accent); }
 .btn-danger{ background:rgba(232,99,93,.12); color:var(--red); border:1px solid rgba(232,99,93,.3); }
 .btn-sm{ padding:6px 11px; font-size:12px; }
 .btn-block{ width:100%; justify-content:center; }

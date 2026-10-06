@@ -121,12 +121,16 @@ public class CasesController : ControllerBase
     {
         try
         {
-            var updated = await _caseService.SetCaseDocumentsAsync(id, dto.DocumentsJson);
+            var updated = await _caseService.SetCaseDocumentsAsync(id, dto.DocumentsJson, CurrentUserId, CurrentUserRole);
             return Ok(updated);
         }
         catch (KeyNotFoundException)
         {
             return NotFound(new { message = "Case not found." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
         }
     }
 

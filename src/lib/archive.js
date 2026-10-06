@@ -75,12 +75,12 @@ function buildCasePdfBlob({ caseRecord, client, typeLabel, lawyerNames, feeRecei
   row('Our Ref', caseRecord.ourRef);
   row('Opening Date', caseRecord.openingDate);
   row('Closing Date', caseRecord.closingDate || '—');
-  row('Fee Agreed', caseRecord.feeAgreed ? `Rs ${Number(caseRecord.feeAgreed).toLocaleString()}` : '—');
-  row('Fee Received', `Rs ${Number(feeReceived || 0).toLocaleString()}`);
+  row('Fee Agreed', caseRecord.feeAgreed ? `£ ${Number(caseRecord.feeAgreed).toLocaleString('en-GB')}` : '—');
+  row('Fee Received', `£ ${Number(feeReceived || 0).toLocaleString('en-GB')}`);
   if (caseRecord.piFields) {
     Object.entries(caseRecord.piFields).forEach(([k, v]) => { if (v) row(k.toUpperCase(), v); });
   }
-  row('Assigned Lawyer(s)', lawyerNames.length ? lawyerNames.join(', ') : 'Unassigned');
+  row('Assigned Advocate(s)', lawyerNames.length ? lawyerNames.join(', ') : 'Unassigned');
 
   if (caseRecord.notes) {
     y += 6; hr();

@@ -18,11 +18,13 @@ import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 export default function LawyerCaseView() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { showToast } = useApp();
+  const { session, showToast } = useApp();
   const [caseRecord, setCaseRecord] = useState(null);
   const [client, setClient] = useState(null);
   const [taskItems, setTaskItems] = useState([]);
   const [lawyers, setLawyers] = useState([]);
+  const [draftTask, setDraftTask] = useState(null);
+  const [savingTask, setSavingTask] = useState(false);
   const markedSeen = useRef(false);
 
   async function reload() {
@@ -105,6 +107,56 @@ export default function LawyerCaseView() {
     reload();
   }
 
+  async function saveTask() {
+    if (!draftTask?.name.trim()) return;
+    setSavingTask(true);
+    try {
+      const created = await tasksApi.create({
+        ...draftTask,
+        caseId: caseRecord.id,
+        assignedLawyerIds: [session.id],
+      });
+      setTaskItems((current) => [...current, created]);
+      setDraftTask(null);
+      showToast("Task created.");
+    } catch (error) {
+      showToast(error.message || "Could not create task.", "error");
+    } finally {
+      setSavingTask(false);
+    }
+  }
+
+  async function updateDocuments(documents) {
+    setCaseRecord((current) => ({ ...current, documents }));
+    try {
+      const updated = await casesApi.setDocuments(caseRecord.id, documents);
+      setCaseRecord(updated);
+    } catch (error) {
+      showToast(error.message || "Could not save case documents.", "error");
+      reload();
+    }
+  }
+
+  async function addTaskAttachments(task, files) {
+    try {
+      const updated = await tasksApi.addAttachments(task.id, files);
+      setTaskItems((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      showToast("File attached to task.");
+    } catch (error) {
+      showToast(error.message || "Could not attach file.", "error");
+    }
+  }
+
+  const caseWritable = [
+    "In Process",
+    "Unassigned",
+    "Assigned",
+    "Delivered",
+    "Seen",
+  ].includes(caseRecord.status);
+
   return (
     <>
       <Topbar />
@@ -134,12 +186,11 @@ export default function LawyerCaseView() {
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <CaseStatus status={caseRecord.status} />
-            {caseRecord.status !== "In Process" &&
-              caseRecord.status !== "Completed" && (
-                <button className="btn btn-primary" onClick={startWorking}>
-                  Start Working
-                </button>
-              )}
+            {caseWritable && caseRecord.status !== "In Process" && (
+              <button className="btn btn-primary" onClick={startWorking}>
+                Start Working
+              </button>
+            )}
             {caseRecord.status === "In Process" && (
               <button className="btn btn-ghost" onClick={markCompleted}>
                 Mark Completed
@@ -179,19 +230,66 @@ export default function LawyerCaseView() {
               <DocumentManager
                 caseId={caseRecord.id}
                 documents={caseRecord.documents || []}
-                readOnly
+                readOnly={!caseWritable}
+                onChange={updateDocuments}
                 emptyLabel="No documents uploaded for this case yet."
               />
             </div>
           </div>
           <div className="card">
-            <h3 style={{ marginBottom: 14 }}>Assigned Tasks</h3>
+            <div className="card-head">
+              <h3>Assigned Tasks</h3>
+              {caseWritable && !draftTask && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() =>
+                    setDraftTask({
+                      name: "",
+                      date: "",
+                      notes: "",
+                      assignedLawyerIds: [session.id],
+                      attachments: [],
+                    })
+                  }
+                >
+                  + Create Task
+                </button>
+              )}
+            </div>
+            {draftTask && (
+              <div style={{ marginBottom: 12 }}>
+                <TaskList
+                  tasks={[draftTask]}
+                  mode="draft"
+                  onChange={(_, value) => setDraftTask(value)}
+                  onRemove={() => setDraftTask(null)}
+                  onAdd={() => {}}
+                />
+                <div className="t-actions" style={{ gap: 8 }}>
+                  <button
+                    className="btn btn-primary btn-sm"
+                    onClick={saveTask}
+                    disabled={savingTask}
+                  >
+                    {savingTask ? "Saving…" : "Save Task"}
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => setDraftTask(null)}
+                    disabled={savingTask}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
             <TaskList
               tasks={taskItems}
               mode="portal"
               lawyerNameOf={lawyerName}
-              onStatusChange={taskStatus}
-              onStartWorking={taskStartWorking}
+              onStatusChange={caseWritable ? taskStatus : undefined}
+              onStartWorking={caseWritable ? taskStartWorking : undefined}
+              onAddAttachments={caseWritable ? addTaskAttachments : undefined}
               emptyLabel="No tasks assigned on this case yet."
             />
           </div>

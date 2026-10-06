@@ -8,21 +8,13 @@ using lawfirm.backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ============================================================================
-// LAYER 5: SECRETS & CONFIGURATION MANAGEMENT
-// Prioritizes Environment Variables & Vault overrides over plain-text config files.
-// ============================================================================
 builder.Configuration.AddEnvironmentVariables();
 
-// ============================================================================
 // LAYER 2: REGISTER APPLICATION SECURITY & AES-256 ENCRYPTION SERVICE
-// ============================================================================
 builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionService>();
 
-// ============================================================================
 // LAYER 1: DATABASE CONTEXT & TLS/SSL IN-TRANSIT SECURITY
 // Enforces SSL Mode=Require on Supabase PostgreSQL Connection
-// ============================================================================
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["DATABASE_URL"]
@@ -55,13 +47,11 @@ builder.Services.AddSingleton<IStorageService, CloudflareR2StorageService>();
 builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
 {
     // Layer 1: Enforce HTTPS policy for outgoing API integrations
-    client.DefaultRequestHeaders.Add("User-Agent", "Casewell-Secure-CRM/2.0");
+    client.DefaultRequestHeaders.Add("User-Agent", "PlugSolicitor-CRM/2.0");
 });
 builder.Services.AddHostedService<TaskReminderBackgroundService>();
 
-// ============================================================================
 // LAYER 4: AUTHENTICATION, JWT SIGNING & HTTPONLY SECURE COOKIE TRANSPORT
-// ============================================================================
 var jwtKey =
     builder.Configuration["Jwt:Key"]
     ?? builder.Configuration["JWT_SECRET"]
@@ -139,7 +129,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Casewell Law Firm CRM API (5-Layer Encrypted)",
+        Title = "Plug Solicitor Law Firm CRM API (5-Layer Encrypted)",
         Version = "v1",
         Description = "ASP.NET Core 8 Web API with AES-256-GCM Field Encryption, Encrypted Storage & Secure HttpOnly Cookies"
     });
@@ -181,7 +171,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Casewell Law Firm CRM API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plug Solicitor CRM API v1");
     });
 }
 else
