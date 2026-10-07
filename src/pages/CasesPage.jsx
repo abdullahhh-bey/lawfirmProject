@@ -17,6 +17,7 @@ export default function CasesPage() {
   const [lawyers, setLawyers] = useState([]);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,6 +42,14 @@ export default function CasesPage() {
 
   const clientName = (id) => clientMap.get(id) || "—";
   const lawyerName = (id) => lawyerMap.get(id) || "Unassigned";
+  const caseTypeOptions = useMemo(() => {
+    const seen = new Set();
+    return [...new Set(cases.map((c) => c.caseTypeCode))]
+      .map((code) => ({ code, ...caseTypeByCode(code) }))
+      .filter(
+        (entry) => entry && !seen.has(entry.code) && seen.add(entry.code),
+      );
+  }, [cases]);
 
   const rows = useMemo(() => {
     let r = cases;
@@ -50,6 +59,9 @@ export default function CasesPage() {
       r = r.filter((c) => c.status === "Completed" || c.status === "Archived");
     } else {
       r = r.filter((c) => c.status === statusFilter);
+    }
+    if (typeFilter !== "all") {
+      r = r.filter((c) => c.caseTypeCode === typeFilter);
     }
     if (q.trim()) {
       const qq = q.toLowerCase();
@@ -63,7 +75,7 @@ export default function CasesPage() {
     return [...r].sort((a, b) =>
       (b.updatedAt || "").localeCompare(a.updatedAt || ""),
     );
-  }, [cases, q, statusFilter, clientMap]);
+  }, [cases, q, statusFilter, typeFilter, clientMap]);
 
   if (loading) {
     return (
@@ -113,6 +125,26 @@ export default function CasesPage() {
               fontSize: 13.5,
             }}
           />
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            style={{
+              minWidth: 180,
+              background: "var(--surface-2)",
+              border: "1.5px solid var(--line)",
+              color: "var(--text)",
+              padding: "10px 13px",
+              borderRadius: 9,
+              fontSize: 13.5,
+            }}
+          >
+            <option value="all">All Case Types</option>
+            {caseTypeOptions.map((t) => (
+              <option key={t.code} value={t.code}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="chip-row">
           <button

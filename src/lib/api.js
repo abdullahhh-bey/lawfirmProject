@@ -265,6 +265,13 @@ export const cases = {
     });
   },
 
+  async listByClient(clientId) {
+    return await fetchWithCache(`cases_client_${clientId}`, async () => {
+      const list = (await request(`/cases/client/${clientId}`)) || [];
+      return list.map(transformCase);
+    });
+  },
+
   async listForLawyer(lawyerId) {
     const list = (await request('/cases')) || [];
     return list.map(transformCase);

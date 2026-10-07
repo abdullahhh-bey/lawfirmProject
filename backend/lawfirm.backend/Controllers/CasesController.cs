@@ -38,6 +38,20 @@ public class CasesController : ControllerBase
         return Ok(cases);
     }
 
+    [HttpGet("client/{clientId:guid}")]
+    public async Task<ActionResult<List<CaseDto>>> GetCasesByClient(Guid clientId)
+    {
+        try
+        {
+            var cases = await _caseService.GetCasesByClientAsync(clientId, CurrentUserId, CurrentUserRole);
+            return Ok(cases);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<CaseDto>> GetCaseById(Guid id)
     {

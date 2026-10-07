@@ -45,6 +45,26 @@ public class CaseService : ICaseService
         return cases.Select(MapToDto).ToList();
     }
 
+    public async Task<List<CaseDto>> GetCasesByClientAsync(Guid clientId, Guid currentUserId, string role)
+    {
+        IQueryable<CaseRecord> query = _context.Cases
+            .AsNoTracking()
+            .Include(c => c.Client)
+            .Include(c => c.AssignedLawyers)
+            .Where(c => c.ClientId == clientId);
+
+        if (role != "admin")
+        {
+            query = query.Where(c => c.AssignedLawyers.Any(l => l.Id == currentUserId));
+        }
+
+        var cases = await query
+            .OrderByDescending(c => c.UpdatedAt)
+            .ToListAsync();
+
+        return cases.Select(MapToDto).ToList();
+    }
+
     public async Task<CaseDto?> GetCaseByIdAsync(Guid caseId, Guid currentUserId, string role)
     {
         var caseRecord = await _context.Cases
