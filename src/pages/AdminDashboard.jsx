@@ -116,20 +116,22 @@ export default function AdminDashboard() {
   return (
     <>
       <Topbar />
-      <div className="page">
-        <div className="page-head">
+      <main className="page dashboard-page">
+        <div className="dashboard-hero">
           <div>
-            <h1>Dashboard</h1>
+            <div className="dashboard-eyebrow">PLUG SOLICITORS</div>
+            <h1>Firm overview</h1>
             <div className="sub">
               Firm-wide overview of cases, tasks, and advocate workload.
             </div>
           </div>
-          <Link to="/cases/new" className="btn btn-primary">
-            + New Client / Case
+          <Link to="/cases/new" className="btn btn-primary dashboard-create">
+            <span aria-hidden="true">+</span>
+            New Client / Case
           </Link>
         </div>
 
-        <div className="grid grid-4" style={{ marginBottom: 24 }}>
+        <div className="grid grid-4 dashboard-stats">
           <StatCard
             label="Total Cases"
             value={cases.length}
@@ -152,15 +154,18 @@ export default function AdminDashboard() {
           />
         </div>
 
-        <div className="grid grid-2">
-          <div className="card">
-            <div className="card-head">
-              <h3>Recent Cases</h3>
+        <div className="dashboard-columns">
+          <section className="dashboard-panel dashboard-recent">
+            <div className="dashboard-section-head">
+              <div>
+                <div className="dashboard-section-kicker">CASE ACTIVITY</div>
+                <h2>Recent cases</h2>
+              </div>
               <Link to="/cases" className="link">
                 View all
               </Link>
             </div>
-            <div className="table-wrap" style={{ border: "none" }}>
+            <div className="table-wrap dashboard-table">
               <table>
                 <thead>
                   <tr>
@@ -197,61 +202,51 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
 
-          <div className="card">
-            <div className="card-head">
-              <h3>Upcoming &amp; Reminders (next 3 days)</h3>
+          <section className="dashboard-panel dashboard-upcoming">
+            <div className="dashboard-section-head">
+              <div>
+                <div className="dashboard-section-kicker">PRIORITY WORK</div>
+                <h2>Due soon</h2>
+                <p>Upcoming tasks and reminders · next 3 days</p>
+              </div>
               <Link to="/calendar" className="link">
                 Open calendar
               </Link>
             </div>
             {upcoming.length === 0 && (
-              <div
-                style={{
-                  color: "var(--text-muted)",
-                  fontSize: 13,
-                  padding: "10px 0",
-                }}
-              >
+              <div className="dashboard-empty">
                 Nothing due in the next 3 days.
               </div>
             )}
             {upcoming.map((t) => {
               const c = cases.find((c) => c.id === t.caseId);
               return (
-                <div
-                  key={t.id}
-                  className="msg-log-row"
-                  style={{ marginBottom: 8 }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>
-                      {t.name}
-                    </div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-muted)" }}>
+                <div key={t.id} className="dashboard-reminder">
+                  <div className="dashboard-reminder-main">
+                    <div className="dashboard-reminder-name">{t.name}</div>
+                    <div className="dashboard-reminder-meta">
                       {c?.caseId} · {clientName(c?.clientId)} ·{" "}
                       {(t.assignedLawyerIds || []).length
                         ? t.assignedLawyerIds.map(lawyerName).join(", ")
                         : "Unassigned"}
                     </div>
                   </div>
-                  <span className="mono" style={{ fontSize: 12 }}>
-                    {t.date}
-                  </span>
+                  <span className="dashboard-reminder-date">{t.date}</span>
                 </div>
               );
             })}
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </>
   );
 }
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="card stat-card">
+    <div className="dashboard-stat">
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
       <div className="stat-sub">{sub}</div>

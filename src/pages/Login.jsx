@@ -27,48 +27,80 @@ export default function Login() {
 
   return (
     <div className="login-screen">
-      <div className="login-card">
-        <img
-          className="login-logo"
-          src={logoUrl}
-          alt="PLUG SOLICITORS — Just in Case"
-          width="300"
-          height="200"
-        />
-        <div className="sub">
-          Sign in to the case &amp; client management portal
-        </div>
-        <form onSubmit={submit}>
-          <div className="field">
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@firm.com"
-              autoFocus
+      <main className="login-shell">
+        <section className="login-brand-panel" aria-label="PLUG SOLICITORS">
+          <div className="login-brand-frame">
+            <img
+              className="login-logo"
+              src={logoUrl}
+              alt="PLUG SOLICITORS — Just in Case"
+              width="520"
+              height="347"
             />
           </div>
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
+          <div className="login-brand-index" aria-hidden="true">
+            <span />
+            <span />
+            <span />
           </div>
-          {err && <div className="err-text">{err}</div>}
-          <button className="btn btn-primary btn-block" disabled={busy}>
-            {busy ? "Signing in…" : "Sign In"}
-          </button>
-        </form>
-        <div className="demo-note">
-          Demo accounts — Admin: admin@firm.com / admin
-          <br />
-          Advocate: s.jennings@firm.com / password
-        </div>
-      </div>
+        </section>
+
+        <section className="login-form-panel">
+          <div className="login-form-content">
+            <div className="login-form-head">
+              <div className="login-overline">PLUG SOLICITORS</div>
+              <h1>Welcome back</h1>
+              <p>Sign in to your account to continue.</p>
+            </div>
+
+            <form onSubmit={submit} className="login-form">
+              <div className="field login-field">
+                <label htmlFor="login-email">Email address</label>
+                <input
+                  id="login-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@firm.com"
+                  autoComplete="username"
+                  autoFocus
+                />
+              </div>
+              <div className="field login-field">
+                <label htmlFor="login-password">Password</label>
+                <input
+                  id="login-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                />
+              </div>
+              {err && (
+                <div className="err-text login-error" role="alert">
+                  {err}
+                </div>
+              )}
+              <button
+                className="btn btn-primary btn-block login-submit"
+                disabled={busy}
+              >
+                {busy ? "Signing in…" : "Sign in"}
+              </button>
+            </form>
+
+            <div className="login-demo">
+              <div className="login-demo-title">Demo access</div>
+              <div>Admin · admin@firm.com / admin</div>
+              <div>Advocate · s.jennings@firm.com / password</div>
+            </div>
+          </div>
+          <div className="login-form-foot">
+            Secure access for firm personnel
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -119,19 +119,6 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     ctx.font = '12px sans-serif';
     ctx.fillText('This is a computer-generated official receipt issued by PLUG SOLICITORS.', 50, y + 50);
 
-    // Stamp / Sign Line
-    ctx.strokeStyle = '#64748B';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(550, y + 40);
-    ctx.lineTo(750, y + 40);
-    ctx.stroke();
-
-    ctx.fillStyle = '#334155';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Authorized Signature & Stamp', 650, y + 60);
-
     const logo = new Image();
     logo.onload = () => {
       ctx.imageSmoothingEnabled = true;
