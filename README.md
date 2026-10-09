@@ -1,6 +1,6 @@
-# Plug Solicitor CRM
+# PLUG SOLICITORS CRM
 
-Plug Solicitor CRM is a secure, role-based legal operations platform designed for a modern law firm. It brings together client management, case intake, attorney assignment, task tracking, finance, messaging, and document handling in one system.
+PLUG SOLICITORS CRM is a secure, role-based legal operations platform designed for a modern law firm. It brings together client management, case intake, attorney assignment, task tracking, finance, messaging, and document handling in one system.
 
 The application supports both an admin operations view and a separate lawyer portal, allowing the firm to manage internal workflows while giving advocates access to the matters assigned to them.
 
@@ -174,7 +174,7 @@ dotnet run
 
 ## Project purpose
 
-Plug Solicitor CRM is designed to help a law firm operate more efficiently by centralizing client, matter, task, finance, and communication workflows in a single system. The product balances operational control for the admin team with a practical, focused workspace for lawyers handling active files.
+PLUG SOLICITORS CRM is designed to help a law firm operate more efficiently by centralizing client, matter, task, finance, and communication workflows in a single system. The product balances operational control for the admin team with a practical, focused workspace for lawyers handling active files.
 
 ## Summary
 

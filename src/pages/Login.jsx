@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
+import logoUrl from "../components/ui/Gemini_Generated_Image_gehpycgehpycgehp.png?url";
 
 export default function Login() {
   const { login } = useApp();
@@ -27,7 +28,13 @@ export default function Login() {
   return (
     <div className="login-screen">
       <div className="login-card">
-        <h1>Plug Solicitor</h1>
+        <img
+          className="login-logo"
+          src={logoUrl}
+          alt="PLUG SOLICITORS — Just in Case"
+          width="300"
+          height="200"
+        />
         <div className="sub">
           Sign in to the case &amp; client management portal
         </div>

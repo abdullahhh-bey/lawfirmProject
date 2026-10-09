@@ -47,7 +47,7 @@ export default function MessageComposer({ lawyer, onClose, onSent }) {
         if (text.trim()) {
           await whatsApp.sendMessage({
             phoneNumber: phone,
-            message: `[Plug Solicitor - ${lawyer.name}]\n${text}`,
+            message: `[PLUG SOLICITORS - ${lawyer.name}]\n${text}`,
           });
         }
 
@@ -81,7 +81,7 @@ export default function MessageComposer({ lawyer, onClose, onSent }) {
               file: fileToSend,
               caption: text.trim()
                 ? `Attachment: ${att.name}`
-                : `[Plug Solicitor] Attachment: ${att.name}`,
+                : `[PLUG SOLICITORS] Attachment: ${att.name}`,
             });
           }
         }

@@ -1,12 +1,15 @@
 /**
  * Generates an official Law Firm Payment Receipt image (PNG Blob) using HTML5 Canvas.
  */
+import logoUrl from '../components/ui/Gemini_Generated_Image_gehpycgehpycgehp.png?url';
+
 export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeBalance }) {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 1000;
+    canvas.width = 1600;
+    canvas.height = 2000;
     const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
 
     // Background
     ctx.fillStyle = '#FFFFFF';
@@ -19,14 +22,9 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 800, 140);
 
-    // Law Firm Title
-    ctx.fillStyle = '#D97706'; // Gold Accent
-    ctx.font = 'bold 28px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('PLUG SOLICITOR', 40, 50);
-
     ctx.fillStyle = '#F8FAFC';
     ctx.font = '14px "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('Solicitors & Legal Services', 40, 75);
+    ctx.fillText('Solicitors & Legal Services', 200, 75);
 
     // Badge
     ctx.fillStyle = '#3B82F6';
@@ -119,7 +117,7 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     // Footer & Signature
     ctx.fillStyle = '#94A3B8';
     ctx.font = '12px sans-serif';
-    ctx.fillText('This is a computer-generated official receipt issued by Plug Solicitor.', 50, y + 50);
+    ctx.fillText('This is a computer-generated official receipt issued by PLUG SOLICITORS.', 50, y + 50);
 
     // Stamp / Sign Line
     ctx.strokeStyle = '#64748B';
@@ -134,9 +132,24 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     ctx.textAlign = 'center';
     ctx.fillText('Authorized Signature & Stamp', 650, y + 60);
 
-    // Convert canvas to blob
-    canvas.toBlob((blob) => {
-      resolve({ blob, dataUrl: canvas.toDataURL('image/png'), receiptNo });
-    }, 'image/png');
+    const logo = new Image();
+    logo.onload = () => {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      const logoHeight = (155 * logo.naturalHeight) / logo.naturalWidth;
+      ctx.drawImage(logo, 20, 18, 155, logoHeight);
+      canvas.toBlob((blob) => {
+        resolve({ blob, dataUrl: canvas.toDataURL('image/png'), receiptNo });
+      }, 'image/png');
+    };
+    logo.onerror = () => {
+      ctx.fillStyle = '#D97706';
+      ctx.font = 'bold 22px "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('PLUG SOLICITORS', 40, 55);
+      canvas.toBlob((blob) => {
+        resolve({ blob, dataUrl: canvas.toDataURL('image/png'), receiptNo });
+      }, 'image/png');
+    };
+    logo.src = logoUrl;
   });
 }

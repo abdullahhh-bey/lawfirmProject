@@ -17,13 +17,13 @@ export default function ClientPaymentReminderModal({
       id: "standard",
       label: "Standard Outstanding Fee",
       getText: () =>
-        `Dear ${client?.name || "Client"},\n\nThis is a gentle payment reminder from Plug Solicitor regarding your account. Your current outstanding balance is £ ${Number(outstanding).toLocaleString("en-GB")} for ${caseIdStr}.\n\nPlease let us know when you would like to proceed with the payment. Thank you!`,
+        `Dear ${client?.name || "Client"},\n\nThis is a gentle payment reminder from PLUG SOLICITORS regarding your account. Your current outstanding balance is £ ${Number(outstanding).toLocaleString("en-GB")} for ${caseIdStr}.\n\nPlease let us know when you would like to proceed with the payment. Thank you!`,
     },
     {
       id: "installment",
       label: "Installment / Hearing Notice",
       getText: () =>
-        `Dear ${client?.name || "Client"},\n\nWe request you to kindly settle the pending legal fee installment of £ ${Number(outstanding).toLocaleString("en-GB")} for matter ${caseIdStr} at your earliest convenience.\n\nWarm regards,\nPlug Solicitor`,
+        `Dear ${client?.name || "Client"},\n\nWe request you to kindly settle the pending legal fee installment of £ ${Number(outstanding).toLocaleString("en-GB")} for matter ${caseIdStr} at your earliest convenience.\n\nWarm regards,\nPLUG SOLICITORS`,
     },
     {
       id: "custom",

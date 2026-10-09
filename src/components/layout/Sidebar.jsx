@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext.jsx";
+import logoUrl from "../ui/Gemini_Generated_Image_gehpycgehpycgehp.png?url";
 
 const icon = (path) => (
   <svg
@@ -80,8 +81,13 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark">C</div>
-        <div className="brand-name">Plug Solicitor</div>
+        <img
+          className="brand-logo"
+          src={logoUrl}
+          alt="PLUG SOLICITORS — Just in Case"
+          width="200"
+          height="133"
+        />
       </div>
 
       {isAdmin ? (

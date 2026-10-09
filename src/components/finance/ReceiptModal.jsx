@@ -73,7 +73,7 @@ export default function ReceiptModal({
       const amount = Number(entry?.amount ?? 0);
 
       const caption =
-        `[Plug Solicitor]\n` +
+        `[PLUG SOLICITORS]\n` +
         `Dear ${client?.name || "Client"},\n` +
         `Thank you for your payment. Attached is your official payment receipt ` +
         `(${receiptNo}) for £ ${amount.toLocaleString("en-GB")}.`;
@@ -111,6 +111,8 @@ export default function ReceiptModal({
           <img
             src={dataUrl}
             alt="Payment Receipt"
+            width={1600}
+            height={2000}
             style={{
               maxWidth: "100%",
               maxHeight: "360px",

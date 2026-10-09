@@ -47,7 +47,7 @@ builder.Services.AddSingleton<IStorageService, CloudflareR2StorageService>();
 builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
 {
     // Layer 1: Enforce HTTPS policy for outgoing API integrations
-    client.DefaultRequestHeaders.Add("User-Agent", "PlugSolicitor-CRM/2.0");
+    client.DefaultRequestHeaders.Add("User-Agent", "PLUG-SOLICITORS-CRM/2.0");
 });
 builder.Services.AddHostedService<TaskReminderBackgroundService>();
 
@@ -129,7 +129,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Plug Solicitor Law Firm CRM API (5-Layer Encrypted)",
+        Title = "PLUG SOLICITORS Law Firm CRM API (5-Layer Encrypted)",
         Version = "v1",
         Description = "ASP.NET Core 8 Web API with AES-256-GCM Field Encryption, Encrypted Storage & Secure HttpOnly Cookies"
     });
@@ -171,7 +171,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Plug Solicitor CRM API v1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "PLUG SOLICITORS CRM API v1");
     });
 }
 else

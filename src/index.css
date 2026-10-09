@@ -27,7 +27,8 @@ h1,h2,h3,h4{ font-family:var(--font-display); }
 
 /* ---------- Sidebar ---------- */
 .sidebar{ width:236px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:20px 14px; }
-.brand{ display:flex; align-items:center; gap:10px; padding:6px 8px 22px; }
+.brand{ display:flex; align-items:center; justify-content:center; padding:6px 4px 18px; }
+.brand-logo{ display:block; width:200px; max-width:100%; height:133px; object-fit:contain; }
 .brand-mark{ width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#8a6d2f); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; color:#14161a; font-size:15px; }
 .brand-name{ font-family:var(--font-display); font-weight:800; font-size:15.5px; letter-spacing:.01em; }
 .nav-group{ margin-bottom:16px; }
@@ -191,6 +192,7 @@ tr.clickable:hover{ background:var(--surface-2); cursor:pointer; }
 .login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 20% 20%, #1c2128, var(--bg)); padding:20px; }
 .login-card{ width:100%; max-width:400px; background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:38px 34px; }
 .login-card h1{ font-size:22px; font-weight:800; margin-bottom:4px; }
+.login-logo{ display:block; width:300px; max-width:100%; height:200px; object-fit:contain; margin:0 auto 12px; }
 .login-card .sub{ color:var(--text-muted); font-size:13px; margin-bottom:26px; }
 .role-toggle{ display:flex; gap:8px; margin-bottom:20px; }
 .demo-note{ font-size:11.5px; color:var(--text-muted); margin-top:16px; text-align:center; line-height:1.6; }
