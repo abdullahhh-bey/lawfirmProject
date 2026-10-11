@@ -5,9 +5,11 @@ import ChangePasswordModal from "../ui/ChangePasswordModal.jsx";
 export default function Topbar({ title }) {
   const { session } = useApp();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const isLawyer = session?.role === "lawyer";
+  const canChangePassword = ["admin", "lawyer"].includes(
+    (session?.role || "").toLowerCase(),
+  );
 
-  if (!isLawyer) return null;
+  if (!canChangePassword) return null;
 
   return (
     <div className="topbar">

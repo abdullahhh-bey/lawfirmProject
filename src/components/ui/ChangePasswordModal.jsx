@@ -54,7 +54,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
   return (
     <Modal
       title="Change Password"
-      sub="Choose a new password for your advocate account."
+      sub="Choose a new password for your account."
       onClose={closeModal}
       maxWidth="440px"
     >

@@ -25,7 +25,7 @@ public class CloudflareR2StorageService : IStorageService
         var serviceUrl = configuration["CloudflareR2:ServiceUrl"]
             ?? throw new InvalidOperationException("CloudflareR2:ServiceUrl is missing.");
 
-        _bucketName = configuration["CloudflareR2:BucketName"] ?? "lawfirm-case-documents";
+        _bucketName = configuration["CloudflareR2:BucketName"] ?? "lawfirm-documents";
 
         var config = new AmazonS3Config
         {

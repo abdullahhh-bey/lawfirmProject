@@ -12,11 +12,30 @@ public class SecurityEncryptionService : ISecurityEncryptionService
     public SecurityEncryptionService(IConfiguration configuration, ILogger<SecurityEncryptionService> logger)
     {
         _logger = logger;
-        var masterKeyStr = configuration["Security:EncryptionKey"] 
+        var masterKeyStr = configuration["Security:EncryptionKey"]
             ?? configuration["SECURITY_ENCRYPTION_KEY"]
-            ?? "Casewell_LawFirm_Master_AES256_EncryptionKey_32Bytes!"; // 32 chars = 256 bits
+            ?? throw new InvalidOperationException("Security encryption key is not configured.");
 
-        _key = Encoding.UTF8.GetBytes(masterKeyStr.PadRight(32).Substring(0, 32));
+        byte[] keyBytes;
+        try
+        {
+            keyBytes = Convert.FromBase64String(masterKeyStr);
+        }
+        catch
+        {
+            keyBytes = Encoding.UTF8.GetBytes(masterKeyStr);
+        }
+
+        if (keyBytes.Length < 32)
+        {
+            keyBytes = keyBytes.Concat(new byte[32 - keyBytes.Length]).ToArray();
+        }
+        else if (keyBytes.Length > 32)
+        {
+            keyBytes = keyBytes[..32];
+        }
+
+        _key = keyBytes;
     }
 
     public string Encrypt(string? plainText)

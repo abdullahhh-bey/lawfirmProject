@@ -62,7 +62,10 @@ export default function AttachmentList({
             key={a.id}
             type="button"
             className="chip"
-            onClick={() => onDownload(a)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onDownload(a);
+            }}
             title={`Download ${a.name}`}
             style={{ ...style, cursor: "pointer" }}
           >

@@ -689,7 +689,26 @@ export const messaging = {
 
   async send({ recipientIds, text, attachments }) {
     clearCache();
-    const sanitizedAttachments = sanitizeAttachmentList(attachments || []).map(({ id, name, mimeType, size, storagePath, createdAt, parentId }) => ({
+    const storedAttachments = await Promise.all((attachments || []).map(async (attachment) => {
+      if (attachment.storagePath) return attachment;
+
+      let file = attachment.rawFile || attachment.file;
+      if (!file && attachment.dataUrl) {
+        const response = await fetch(attachment.dataUrl);
+        const blob = await response.blob();
+        file = new File([blob], attachment.name || 'attachment', {
+          type: attachment.mimeType || attachment.type || blob.type,
+        });
+      }
+
+      if (!file) {
+        throw new Error(`The file "${attachment.name || 'attachment'}" is no longer available. Please attach it again.`);
+      }
+
+      return await this.uploadAttachment(file);
+    }));
+
+    const sanitizedAttachments = sanitizeAttachmentList(storedAttachments).map(({ id, name, mimeType, size, storagePath, createdAt, parentId }) => ({
       id, name, mimeType, size, ...(storagePath ? { storagePath } : {}), ...(createdAt ? { createdAt } : {}), ...(parentId ? { parentId } : {}),
     }));
 
@@ -708,6 +727,49 @@ export const messaging = {
     return await request(`/messaging/attachments?storagePath=${encodeURIComponent(storagePath)}`, {
       method: 'DELETE',
     });
+  },
+
+  async downloadAttachment(attachment) {
+    const legacyUrl = attachment.dataUrl || attachment.url;
+    if (legacyUrl) {
+      const link = document.createElement('a');
+      link.href = legacyUrl;
+      link.download = attachment.name || 'attachment';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+
+    if (!attachment.storagePath) {
+      throw new Error('This attachment has no stored file. Ask the sender to attach it again.');
+    }
+
+    const token = getAuthToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const params = new URLSearchParams({ storagePath: attachment.storagePath });
+    const res = await fetch(
+      `${API_BASE_URL}/messaging/attachments/download?${params}`,
+      { method: 'GET', credentials: 'include', headers },
+    );
+
+    if (!res.ok) {
+      let errMessage = 'Failed to download message attachment.';
+      try {
+        const data = await res.json();
+        errMessage = data.message || errMessage;
+      } catch {}
+      throw new Error(errMessage);
+    }
+
+    const objectUrl = URL.createObjectURL(await res.blob());
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = attachment.name || 'attachment';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
   },
 
   async markSeen(messageId, lawyerId) {

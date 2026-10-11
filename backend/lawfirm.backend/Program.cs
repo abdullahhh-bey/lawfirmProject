@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -6,9 +7,52 @@ using Microsoft.OpenApi.Models;
 using lawfirm.backend.Data;
 using lawfirm.backend.Services;
 
+static string LoadOrCreateSecureSecret(string environmentVariableName, string configKey, int requiredBytes, string secretFileName)
+{
+    var configured = Environment.GetEnvironmentVariable(environmentVariableName);
+    if (string.IsNullOrWhiteSpace(configured))
+    {
+        configured = Environment.GetEnvironmentVariable(configKey.Replace(":", "_"));
+    }
+
+    if (string.IsNullOrWhiteSpace(configured))
+    {
+        var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lawfirm-crm");
+        Directory.CreateDirectory(appDataFolder);
+        var secretFile = Path.Combine(appDataFolder, secretFileName);
+
+        if (File.Exists(secretFile))
+        {
+            configured = File.ReadAllText(secretFile).Trim();
+        }
+    }
+
+    if (string.IsNullOrWhiteSpace(configured))
+    {
+        configured = Convert.ToBase64String(RandomNumberGenerator.GetBytes(requiredBytes));
+        var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lawfirm-crm");
+        Directory.CreateDirectory(appDataFolder);
+        var secretFile = Path.Combine(appDataFolder, secretFileName);
+        File.WriteAllText(secretFile, configured);
+    }
+
+    return configured;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
+
+var jwtKey = LoadOrCreateSecureSecret("JWT_SECRET", "Jwt:Key", 32, "jwt-secret.txt");
+var encryptionKey = LoadOrCreateSecureSecret("SECURITY_ENCRYPTION_KEY", "Security:EncryptionKey", 32, "encryption-key.txt");
+
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+{
+    ["Jwt:Key"] = jwtKey,
+    ["Security:EncryptionKey"] = encryptionKey,
+    ["JWT_SECRET"] = jwtKey,
+    ["SECURITY_ENCRYPTION_KEY"] = encryptionKey
+});
 
 // LAYER 2: REGISTER APPLICATION SECURITY & AES-256 ENCRYPTION SERVICE
 builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionService>();
@@ -52,12 +96,6 @@ builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
 builder.Services.AddHostedService<TaskReminderBackgroundService>();
 
 // LAYER 4: AUTHENTICATION, JWT SIGNING & HTTPONLY SECURE COOKIE TRANSPORT
-var jwtKey =
-    builder.Configuration["Jwt:Key"]
-    ?? builder.Configuration["JWT_SECRET"]
-    ?? throw new InvalidOperationException("JWT secret missing");
-
-
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "LawFirmCrm";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "LawFirmCrmClient";

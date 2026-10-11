@@ -26,6 +26,17 @@ export default function MessagingPage() {
     lawyers.find((l) => (l.id || "").toLowerCase() === (id || "").toLowerCase())
       ?.name || id;
 
+  async function downloadAttachment(attachment) {
+    try {
+      await messaging.downloadAttachment(attachment);
+    } catch (error) {
+      showToast(
+        error.message || "Could not download this attachment.",
+        "error",
+      );
+    }
+  }
+
   return (
     <>
       <Topbar />
@@ -128,7 +139,11 @@ export default function MessagingPage() {
                   </span>
                 </div>
                 {m.text && <div style={{ fontSize: 13 }}>{m.text}</div>}
-                <AttachmentList attachments={m.attachments} compact />
+                <AttachmentList
+                  attachments={m.attachments}
+                  compact
+                  onDownload={downloadAttachment}
+                />
                 <NotificationStatus
                   recipientStatus={m.recipientStatus}
                   lawyerNameOf={lawyerName}

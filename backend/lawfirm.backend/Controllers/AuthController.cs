@@ -72,9 +72,9 @@ public class AuthController : ControllerBase
         return Ok(profile);
     }
 
-    // CHANGE PASSWORD ENDPOINT (LAWYER ONLY)
+    // CHANGE PASSWORD ENDPOINT (ADMIN AND LAWYER)
     [HttpPost("change-password")]
-    [Authorize(Roles = "lawyer")]
+    [Authorize(Roles = "admin,lawyer")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
     {
         if (!ModelState.IsValid)
