@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Topbar from "../components/layout/Topbar.jsx";
 import ClientDetails from "../components/clients/ClientDetails.jsx";
 import CaseDetails from "../components/cases/CaseDetails.jsx";
@@ -31,6 +31,7 @@ const newTask = () => ({
 export default function CaseDetailsPage() {
   const { id } = useParams();
   const nav = useNavigate();
+  const location = useLocation();
   const { showToast, session } = useApp();
 
   const [caseRecord, setCaseRecord] = useState(null);
@@ -47,6 +48,12 @@ export default function CaseDetailsPage() {
   const [loading, setLoading] = useState(true);
 
   const isAdmin = session?.role === "admin";
+  const historyReturnPath = location.state?.returnTo;
+  const backPath =
+    typeof historyReturnPath === "string" &&
+    /^\/clients\/[^/]+\/history$/.test(historyReturnPath)
+      ? historyReturnPath
+      : "/cases";
 
   async function reload() {
     setLoading(true);
@@ -250,10 +257,10 @@ export default function CaseDetailsPage() {
           <div>
             <button
               className="link"
-              onClick={() => nav("/cases")}
+              onClick={() => nav(backPath)}
               style={{ fontSize: 12, marginBottom: 6, display: "inline-block" }}
             >
-              ← All Cases
+              {backPath === "/cases" ? "← All Cases" : "← Client History"}
             </button>
             <h1>
               {caseRecord.caseId}{" "}

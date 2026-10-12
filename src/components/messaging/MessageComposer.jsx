@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Modal from "../ui/Modal.jsx";
 import AttachmentInput from "../ui/AttachmentInput.jsx";
+import SubmitProgress from "../ui/SubmitProgress.jsx";
 import { messaging, whatsApp } from "../../lib/api.js";
 
 export default function MessageComposer({ lawyer, onClose, onSent }) {
@@ -13,7 +14,12 @@ export default function MessageComposer({ lawyer, onClose, onSent }) {
   const [err, setErr] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
 
+  function close() {
+    if (!sending) onClose();
+  }
+
   async function send() {
+    if (sending) return;
     setErr("");
     setStatusMsg("");
     if (!text.trim() && attachments.length === 0) {
@@ -89,7 +95,7 @@ export default function MessageComposer({ lawyer, onClose, onSent }) {
       }
 
       onSent?.(record, { portal: sendPortal, whatsapp: waSuccess });
-      onClose();
+      close();
     } catch (e) {
       setErr(e.message || "An error occurred while sending message.");
     } finally {
@@ -101,7 +107,7 @@ export default function MessageComposer({ lawyer, onClose, onSent }) {
     <Modal
       title="Send Message"
       sub={`To ${lawyer.name}`}
-      onClose={onClose}
+      onClose={close}
       maxWidth="460px"
     >
       <div className="field">
@@ -207,13 +213,14 @@ export default function MessageComposer({ lawyer, onClose, onSent }) {
       )}
 
       <div className="modal-actions">
-        <button className="btn btn-ghost" onClick={onClose}>
+        <button className="btn btn-ghost" onClick={close} disabled={sending}>
           Cancel
         </button>
         <button className="btn btn-primary" onClick={send} disabled={sending}>
           {sending ? "Sending…" : sendWhatsApp ? "Send via WhatsApp" : "Send"}
         </button>
       </div>
+      {sending && <SubmitProgress label="Sending message…" />}
     </Modal>
   );
 }

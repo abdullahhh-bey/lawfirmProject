@@ -19,11 +19,14 @@ import LawyerPortal from "./pages/LawyerPortal.jsx";
 import LawyerCaseView from "./pages/LawyerCaseView.jsx";
 import LawyerCalendarPage from "./pages/LawyerCalendarPage.jsx";
 import LawyerMessagesPage from "./pages/LawyerMessagesPage.jsx";
+import MutationProgressBar from "./components/ui/MutationProgressBar.jsx";
 
 export default function App() {
   const { session } = useApp();
 
   return (
+    <>
+    <MutationProgressBar />
     <Routes>
       <Route
         path="/login"
@@ -179,5 +182,6 @@ export default function App() {
         }
       />
     </Routes>
+    </>
   );
 }

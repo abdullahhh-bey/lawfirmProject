@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Topbar from "../components/layout/Topbar.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import ConfirmDialog from "../components/ui/ConfirmDialog.jsx";
+import SubmitProgress from "../components/ui/SubmitProgress.jsx";
 import LawyerList from "../components/lawyers/LawyerList.jsx";
 import MessageComposer from "../components/messaging/MessageComposer.jsx";
 import {
@@ -47,6 +48,7 @@ export default function LawyersPage() {
   // Fix: previously only `editing` was cleared, leaving `draft` set so the
   // modal (rendered on `{draft && ...}`) never actually closed.
   function closeModal() {
+    if (saving) return;
     setEditing(null);
     setDraft(null);
   }
@@ -187,7 +189,7 @@ export default function LawyersPage() {
             </div>
           )}
           <div className="modal-actions">
-            <button className="btn btn-ghost" onClick={closeModal}>
+            <button className="btn btn-ghost" onClick={closeModal} disabled={saving}>
               Cancel
             </button>
             <button
@@ -198,6 +200,7 @@ export default function LawyersPage() {
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
+          {saving && <SubmitProgress label="Saving advocate account…" />}
         </Modal>
       )}
 

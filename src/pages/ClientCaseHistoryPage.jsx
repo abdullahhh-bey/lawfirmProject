@@ -111,7 +111,11 @@ export default function ClientCaseHistoryPage() {
                   <tr
                     key={c.id}
                     className="clickable"
-                    onClick={() => nav(`/cases/${c.id}`)}
+                    onClick={() =>
+                      nav(`/cases/${c.id}`, {
+                        state: { returnTo: `/clients/${clientId}/history` },
+                      })
+                    }
                   >
                     <td className="mono" style={{ fontWeight: 700 }}>
                       {c.caseId}

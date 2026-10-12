@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Modal from "../ui/Modal.jsx";
+import SubmitProgress from "../ui/SubmitProgress.jsx";
 import { whatsApp } from "../../lib/api.js";
 
 export default function ClientPaymentReminderModal({
@@ -43,7 +44,12 @@ export default function ClientPaymentReminderModal({
     setMessage(tmpl.getText());
   }
 
+  function close() {
+    if (!sending) onClose();
+  }
+
   async function handleSend() {
+    if (sending) return;
     if (!message.trim()) {
       setErr("Please enter a message before sending.");
       return;
@@ -59,7 +65,7 @@ export default function ClientPaymentReminderModal({
     try {
       await whatsApp.sendMessage({ phoneNumber: phone, message });
       onSent?.();
-      onClose();
+      close();
     } catch (e) {
       setErr(e.message || "Failed to send WhatsApp payment reminder.");
     } finally {
@@ -71,7 +77,7 @@ export default function ClientPaymentReminderModal({
     <Modal
       title="Send Payment Reminder"
       sub={`WhatsApp to ${client?.name}`}
-      onClose={onClose}
+      onClose={close}
       maxWidth="500px"
     >
       <div className="field">
@@ -163,7 +169,7 @@ export default function ClientPaymentReminderModal({
       )}
 
       <div className="modal-actions" style={{ marginTop: 16 }}>
-        <button className="btn btn-ghost" onClick={onClose}>
+        <button className="btn btn-ghost" onClick={close} disabled={sending}>
           Cancel
         </button>
         <button
@@ -174,6 +180,7 @@ export default function ClientPaymentReminderModal({
           {sending ? "Sending WhatsApp…" : "Send WhatsApp Reminder"}
         </button>
       </div>
+      {sending && <SubmitProgress label="Sending WhatsApp reminder…" />}
     </Modal>
   );
 }

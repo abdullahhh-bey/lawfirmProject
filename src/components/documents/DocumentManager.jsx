@@ -5,6 +5,7 @@ import {
   formatBytes,
   isImageAttachment,
 } from "../../lib/files.js";
+import SubmitProgress from "../ui/SubmitProgress.jsx";
 
 // A document tree is a plain array of nodes. Each node is either:
 //   { id, kind: 'folder', name, createdAt, children: [...nodes] }
@@ -58,6 +59,7 @@ export default function DocumentManager({
   const [err, setErr] = useState("");
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
   const safeDocs = Array.isArray(documents) ? documents : [];
@@ -99,8 +101,11 @@ export default function DocumentManager({
   async function handleFiles(e) {
     setMenuOpen(false);
     setErr("");
+    const input = e.target;
+    if (uploading) return;
+    setUploading(true);
     try {
-      const picked = await filesToAttachments(e.target.files);
+      const picked = await filesToAttachments(input.files);
 
       if (caseId) {
         const uploadedNodes = [];
@@ -146,7 +151,8 @@ export default function DocumentManager({
     } catch (ex) {
       setErr(ex.message);
     } finally {
-      e.target.value = "";
+      input.value = "";
+      setUploading(false);
     }
   }
 
@@ -272,8 +278,9 @@ export default function DocumentManager({
               type="button"
               className="btn btn-ghost btn-sm"
               onClick={() => setMenuOpen((o) => !o)}
+              disabled={uploading}
             >
-              + New
+              {uploading ? "Uploading…" : "+ New"}
             </button>
             {menuOpen && (
               <>
@@ -293,9 +300,10 @@ export default function DocumentManager({
                   </button>
                   <button
                     type="button"
+                    disabled={uploading}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    ⬆️ Upload Files
+                    {uploading ? "Uploading…" : "⬆️ Upload Files"}
                   </button>
                 </div>
               </>
@@ -315,6 +323,11 @@ export default function DocumentManager({
         <div className="err-text" style={{ marginBottom: 10 }}>
           {err}
         </div>
+      )}
+      {uploading && (
+        <SubmitProgress
+          label={caseId ? "Uploading documents…" : "Preparing attachments…"}
+        />
       )}
 
       {/* New Folder Modal */}

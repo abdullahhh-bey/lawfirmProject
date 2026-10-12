@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Topbar from "../components/layout/Topbar.jsx";
 import Modal from "../components/ui/Modal.jsx";
+import SubmitProgress from "../components/ui/SubmitProgress.jsx";
 import ClientForm from "../components/clients/ClientForm.jsx";
 import { clients as clientsApi, cases as casesApi } from "../lib/api.js";
 import { useApp } from "../context/AppContext.jsx";
@@ -55,6 +56,7 @@ export default function ClientsPage() {
   // Was only clearing `editing`, leaving `draft` set — since the modal's
   // visibility check is `{draft && (...)}`, it never actually unmounted.
   function closeModal() {
+    if (saving) return;
     setEditing(null);
     setDraft(null);
   }
@@ -208,7 +210,7 @@ export default function ClientsPage() {
         >
           <ClientForm value={draft} onChange={setDraft} />
           <div className="modal-actions">
-            <button className="btn btn-ghost" onClick={closeModal}>
+            <button className="btn btn-ghost" onClick={closeModal} disabled={saving}>
               Cancel
             </button>
             <button
@@ -219,6 +221,7 @@ export default function ClientsPage() {
               {saving ? "Saving…" : "Save"}
             </button>
           </div>
+          {saving && <SubmitProgress label="Saving client…" />}
         </Modal>
       )}
     </>

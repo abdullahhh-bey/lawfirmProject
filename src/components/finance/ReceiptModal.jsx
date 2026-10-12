@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "../ui/Modal.jsx";
+import SubmitProgress from "../ui/SubmitProgress.jsx";
 import { generateReceiptPng } from "../../lib/receiptGenerator.js";
 import { whatsApp } from "../../lib/api.js";
 
@@ -55,7 +56,12 @@ export default function ReceiptModal({
     document.body.removeChild(a);
   }
 
+  function close() {
+    if (!sending) onClose();
+  }
+
   async function sendWhatsApp() {
+    if (sending) return;
     if (!fileBlob || !phone.trim()) {
       setErr("Please provide a valid client phone number.");
       return;
@@ -98,7 +104,7 @@ export default function ReceiptModal({
     <Modal
       title="Payment Receipt Generated"
       sub={`Receipt #${receiptNo} · ${client?.name || ""}`}
-      onClose={onClose}
+      onClose={close}
       maxWidth="600px"
     >
       <div
@@ -193,6 +199,7 @@ export default function ReceiptModal({
           </button>
         </div>
       </div>
+      {sending && <SubmitProgress label="Sending payment receipt…" />}
 
       {err && (
         <div className="err-text" style={{ marginTop: 10 }}>
@@ -228,7 +235,7 @@ export default function ReceiptModal({
           ⬇ Download PNG Receipt
         </button>
 
-        <button className="btn btn-primary" onClick={onClose}>
+        <button className="btn btn-primary" onClick={close} disabled={sending}>
           Done
         </button>
       </div>

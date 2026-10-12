@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Modal from "../ui/Modal.jsx";
 import AttachmentInput from "../ui/AttachmentInput.jsx";
+import SubmitProgress from "../ui/SubmitProgress.jsx";
 import { messaging } from "../../lib/api.js";
 
 export default function BroadcastComposer({
@@ -26,7 +27,12 @@ export default function BroadcastComposer({
   const toggleAll = () =>
     setSelected(allSelected ? new Set() : new Set(lawyers.map((l) => l.id)));
 
+  function close() {
+    if (!sending) onClose();
+  }
+
   async function send() {
+    if (sending) return;
     setErr("");
     if (!text.trim() && attachments.length === 0) {
       setErr("Write a message or attach a file before sending.");
@@ -44,7 +50,7 @@ export default function BroadcastComposer({
         attachments,
       });
       onSent?.(record);
-      onClose();
+      close();
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -56,7 +62,7 @@ export default function BroadcastComposer({
     <Modal
       title="Send Message to Advocates"
       sub={`${selected.size} selected`}
-      onClose={onClose}
+      onClose={close}
       maxWidth="480px"
     >
       <div className="field">
@@ -139,13 +145,14 @@ export default function BroadcastComposer({
         </div>
       )}
       <div className="modal-actions">
-        <button className="btn btn-ghost" onClick={onClose}>
+        <button className="btn btn-ghost" onClick={close} disabled={sending}>
           Cancel
         </button>
         <button className="btn btn-primary" onClick={send} disabled={sending}>
           {sending ? "Sending…" : "Send"}
         </button>
       </div>
+      {sending && <SubmitProgress label="Sending message to advocates…" />}
     </Modal>
   );
 }

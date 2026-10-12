@@ -97,6 +97,7 @@ public class CasesController : ControllerBase
         }
     }
 
+
     [HttpPut("{id:guid}/assign-lawyers")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<CaseDto>> AssignLawyers(Guid id, [FromBody] AssignLawyersDto dto)

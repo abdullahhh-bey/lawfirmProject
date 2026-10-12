@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Modal from "../ui/Modal.jsx";
+import SubmitProgress from "../ui/SubmitProgress.jsx";
 import { caseTypeByCode } from "../../data/nomenclature.js";
 
 const empty = {
@@ -183,13 +184,14 @@ export default function FinanceForm({
       {error && <div className="err-text">{error}</div>}
 
       <div className="modal-actions">
-        <button className="btn btn-ghost" onClick={onClose}>
+        <button className="btn btn-ghost" onClick={onClose} disabled={saving}>
           Cancel
         </button>
         <button className="btn btn-primary" onClick={submit} disabled={saving}>
           {saving ? "Saving…" : "Save Entry"}
         </button>
       </div>
+      {saving && <SubmitProgress label="Saving payment entry…" />}
     </Modal>
   );
 }

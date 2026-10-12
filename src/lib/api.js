@@ -5,6 +5,57 @@ import { CASE_TYPES, caseTypeByCode } from '../data/nomenclature.js';
 
 export const API_BASE_URL = 'http://localhost:5067/api';
 
+let activeMutationRequests = 0;
+const inFlightMutations = new Map();
+
+async function trackedFetch(url, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  const isMutation = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+  const canDeduplicate =
+    isMutation &&
+    typeof options.body === 'string';
+  const mutationKey = canDeduplicate
+    ? `${method}:${url}:${options.body}`
+    : null;
+
+  if (mutationKey && inFlightMutations.has(mutationKey)) {
+    return (await inFlightMutations.get(mutationKey)).clone();
+  }
+
+  const requestPromise = (async () => {
+    if (isMutation) {
+      activeMutationRequests += 1;
+      window.dispatchEvent(
+        new CustomEvent('app:mutation-progress', {
+          detail: { activeCount: activeMutationRequests },
+        }),
+      );
+    }
+
+    try {
+      return await fetch(url, options);
+    } finally {
+      if (isMutation) {
+        activeMutationRequests = Math.max(0, activeMutationRequests - 1);
+        window.dispatchEvent(
+          new CustomEvent('app:mutation-progress', {
+            detail: { activeCount: activeMutationRequests },
+          }),
+        );
+      }
+
+      if (mutationKey) inFlightMutations.delete(mutationKey);
+    }
+  })();
+
+  if (mutationKey) {
+    inFlightMutations.set(mutationKey, requestPromise);
+  }
+
+  const response = await requestPromise;
+  return canDeduplicate ? response.clone() : response;
+}
+
 function isFormData(value) {
   return typeof FormData !== 'undefined' && value instanceof FormData;
 }
@@ -16,7 +67,7 @@ async function request(path, options = {}) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await trackedFetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: 'include',
     headers,
@@ -282,7 +333,7 @@ export const cases = {
     formData.append('file', file);
 
     const folderQuery = folderId ? `?folderId=${encodeURIComponent(folderId)}` : '';
-    const res = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/upload${folderQuery}`, {
+    const res = await trackedFetch(`${API_BASE_URL}/cases/${caseId}/documents/upload${folderQuery}`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -486,7 +537,7 @@ export const tasks = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetch(`${API_BASE_URL}/tasks/${taskId}/attachments/upload`, {
+    const res = await trackedFetch(`${API_BASE_URL}/tasks/${taskId}/attachments/upload`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -645,7 +696,7 @@ export const messaging = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetch(`${API_BASE_URL}/messaging/attachments/upload`, {
+    const res = await trackedFetch(`${API_BASE_URL}/messaging/attachments/upload`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -722,7 +773,7 @@ export const messaging = {
     }
 
     const params = new URLSearchParams({ storagePath: attachment.storagePath });
-    const res = await fetch(
+    const res = await trackedFetch(
       `${API_BASE_URL}/messaging/attachments/download?${params}`,
       { method: 'GET', credentials: 'include' },
     );
@@ -857,7 +908,7 @@ export const whatsApp = {
     formData.append('phoneNumber', phoneNumber);
     if (caption) formData.append('caption', caption);
 
-    const res = await fetch(`${API_BASE_URL}/whatsapp/send-file`, {
+    const res = await trackedFetch(`${API_BASE_URL}/whatsapp/send-file`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -876,4 +927,3 @@ export const whatsApp = {
 };
 
 export { CASE_TYPES, caseTypeByCode };
-

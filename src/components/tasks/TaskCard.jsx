@@ -29,6 +29,8 @@ export default function TaskCard({
   onAddAttachments,
 }) {
   const [uploading, setUploading] = useState(false);
+  const [updatingTask, setUpdatingTask] = useState(false);
+  const [removingTask, setRemovingTask] = useState(false);
   const [attachmentError, setAttachmentError] = useState("");
 
   if (mode === "draft") {
@@ -132,6 +134,36 @@ export default function TaskCard({
     }
   }
 
+  async function handleStatusChange(status) {
+    if (updatingTask) return;
+    setUpdatingTask(true);
+    try {
+      await onStatusChange?.(status);
+    } finally {
+      setUpdatingTask(false);
+    }
+  }
+
+  async function handleRemove() {
+    if (removingTask) return;
+    setRemovingTask(true);
+    try {
+      await onRemove?.();
+    } finally {
+      setRemovingTask(false);
+    }
+  }
+
+  async function handlePortalAction(action) {
+    if (updatingTask) return;
+    setUpdatingTask(true);
+    try {
+      await action?.();
+    } finally {
+      setUpdatingTask(false);
+    }
+  }
+
   return (
     <div className="task-card">
       <div className="task-card-head">
@@ -190,7 +222,8 @@ export default function TaskCard({
         >
           <select
             value={task.status}
-            onChange={(e) => onStatusChange?.(e.target.value)}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            disabled={updatingTask}
             style={{
               background: "var(--surface-3)",
               border: "1px solid var(--line)",
@@ -217,7 +250,8 @@ export default function TaskCard({
             <button
               className="icon-btn-sm del"
               title="Delete task"
-              onClick={onRemove}
+              onClick={handleRemove}
+              disabled={removingTask}
             >
               <svg
                 width="13"
@@ -242,17 +276,19 @@ export default function TaskCard({
             {task.status !== "In Process" && (
               <button
                 className="btn btn-primary btn-sm"
-                onClick={onStartWorking}
+                onClick={() => handlePortalAction(onStartWorking)}
+                disabled={updatingTask}
               >
-                Start Working
+                {updatingTask ? "Starting…" : "Start Working"}
               </button>
             )}
             {task.status === "In Process" && (
               <button
                 className="btn btn-ghost btn-sm"
-                onClick={() => onStatusChange?.("Completed")}
+                onClick={() => handlePortalAction(() => onStatusChange?.("Completed"))}
+                disabled={updatingTask}
               >
-                Mark Completed
+                {updatingTask ? "Updating…" : "Mark Completed"}
               </button>
             )}
           </div>
