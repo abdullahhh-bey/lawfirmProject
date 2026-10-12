@@ -52,12 +52,6 @@ h1,h2,h3,h4{ font-family:var(--font-display); }
 .topbar-search{ display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:8px 12px; width:320px; color:var(--text-muted); }
 .topbar-search input{ background:none; border:none; outline:none; color:var(--text); font-size:13px; width:100%; }
 .topbar-right{ display:flex; align-items:center; gap:14px; }
-.mutation-progress{ position:fixed; top:60px; right:18px; z-index:1001; width:min(280px,calc(100vw - 36px)); padding:10px 13px 12px; border:1px solid var(--line); border-top:2px solid var(--accent); border-radius:0 0 10px 10px; background:rgba(24,27,30,.97); box-shadow:0 8px 24px rgba(0,0,0,.28); animation:mutation-progress-enter .18s ease-out; }
-.mutation-progress-label{ display:block; color:var(--text); font-size:11.5px; font-weight:600; margin-bottom:7px; }
-.mutation-progress-track{ display:block; height:3px; overflow:hidden; border-radius:999px; background:var(--surface-3); }
-.mutation-progress-indicator{ display:block; width:38%; height:100%; border-radius:inherit; background:var(--accent); animation:submit-progress-slide 1.15s ease-in-out infinite; }
-.mutation-progress.is-finishing .mutation-progress-indicator{ width:100%; animation:none; transition:width .2s ease-out; }
-@keyframes mutation-progress-enter{ from{ opacity:0; transform:translateY(-5px); } to{ opacity:1; transform:translateY(0); } }
 .icon-btn{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); position:relative; }
 .icon-btn:hover{ background:var(--surface-2); color:var(--text); }
 .dot-badge{ position:absolute; top:6px; right:6px; width:7px; height:7px; border-radius:50%; background:var(--red); border:1.5px solid var(--bg); }
@@ -93,7 +87,6 @@ h1,h2,h3,h4{ font-family:var(--font-display); }
 .submit-progress-bar{ display:block; width:38%; height:100%; border-radius:inherit; background:var(--accent); animation:submit-progress-slide 1.15s ease-in-out infinite; }
 @keyframes submit-progress-slide{ from{ transform:translateX(-110%); } to{ transform:translateX(270%); } }
 @media (prefers-reduced-motion:reduce){ .submit-progress-bar{ animation-duration:2.5s; } }
-@media (prefers-reduced-motion:reduce){ .mutation-progress-indicator{ animation-duration:2.5s; } }
 .icon-btn-sm{ width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--line); }
 .icon-btn-sm:hover{ color:var(--text); }
 .icon-btn-sm.del:hover{ color:var(--red); border-color:rgba(232,99,93,.4); }
