@@ -175,21 +175,11 @@ export default function DocumentManager({
     e?.stopPropagation();
 
     if (caseId && file.id && !file.dataUrl && !file.url) {
-      const token = (() => {
-        try {
-          const s = JSON.parse(sessionStorage.getItem("session") || "null");
-          return s?.token || null;
-        } catch {
-          return null;
-        }
-      })();
-
       const res = await fetch(
         `${API_BASE_URL}/cases/${caseId}/documents/${file.id}/download`,
         {
           method: "GET",
           credentials: "include",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
         },
       );
 

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace lawfirm.backend.DTOs.Auth;
 
 public class UserSessionDto
@@ -11,6 +13,7 @@ public class UserSessionDto
 
 public class AuthResponseDto
 {
+    [JsonIgnore]
     public string Token { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
     public UserSessionDto Session { get; set; } = new();

@@ -7,20 +7,15 @@ using Microsoft.OpenApi.Models;
 using lawfirm.backend.Data;
 using lawfirm.backend.Services;
 
-static string LoadOrCreateSecureSecret(string environmentVariableName, string configKey, int requiredBytes, string secretFileName)
+static string LoadOrCreateSecureSecret(IConfiguration configuration, string environmentVariableName, string configKey, int requiredBytes, string secretFileName, bool isDevelopment)
 {
-    var configured = Environment.GetEnvironmentVariable(environmentVariableName);
-    if (string.IsNullOrWhiteSpace(configured))
-    {
-        configured = Environment.GetEnvironmentVariable(configKey.Replace(":", "_"));
-    }
+    var configured = configuration[configKey] ?? configuration[environmentVariableName];
 
-    if (string.IsNullOrWhiteSpace(configured))
-    {
-        var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lawfirm-crm");
-        Directory.CreateDirectory(appDataFolder);
-        var secretFile = Path.Combine(appDataFolder, secretFileName);
+    var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lawfirm-crm");
+    var secretFile = Path.Combine(appDataFolder, secretFileName);
 
+    if (string.IsNullOrWhiteSpace(configured) && isDevelopment)
+    {
         if (File.Exists(secretFile))
         {
             configured = File.ReadAllText(secretFile).Trim();
@@ -29,11 +24,19 @@ static string LoadOrCreateSecureSecret(string environmentVariableName, string co
 
     if (string.IsNullOrWhiteSpace(configured))
     {
+        if (!isDevelopment)
+        {
+            throw new InvalidOperationException($"Required production secret '{environmentVariableName}' is not configured.");
+        }
+
         configured = Convert.ToBase64String(RandomNumberGenerator.GetBytes(requiredBytes));
-        var appDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lawfirm-crm");
         Directory.CreateDirectory(appDataFolder);
-        var secretFile = Path.Combine(appDataFolder, secretFileName);
         File.WriteAllText(secretFile, configured);
+    }
+
+    if (Encoding.UTF8.GetByteCount(configured) < requiredBytes)
+    {
+        throw new InvalidOperationException($"Secret '{environmentVariableName}' must contain at least {requiredBytes} bytes.");
     }
 
     return configured;
@@ -43,8 +46,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
 
-var jwtKey = LoadOrCreateSecureSecret("JWT_SECRET", "Jwt:Key", 32, "jwt-secret.txt");
-var encryptionKey = LoadOrCreateSecureSecret("SECURITY_ENCRYPTION_KEY", "Security:EncryptionKey", 32, "encryption-key.txt");
+var jwtKey = LoadOrCreateSecureSecret(builder.Configuration, "JWT_SECRET", "Jwt:Key", 32, "jwt-secret.txt", builder.Environment.IsDevelopment());
+var encryptionKey = LoadOrCreateSecureSecret(builder.Configuration, "SECURITY_ENCRYPTION_KEY", "Security:EncryptionKey", 32, "encryption-key.txt", builder.Environment.IsDevelopment());
 
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 {
@@ -58,7 +61,7 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionService>();
 
 // LAYER 1: DATABASE CONTEXT & TLS/SSL IN-TRANSIT SECURITY
-// Enforces SSL Mode=Require on Supabase PostgreSQL Connection
+// Enforces SSL Mode=Require on the PostgreSQL connection
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["DATABASE_URL"]
@@ -85,11 +88,13 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
 builder.Services.AddScoped<ILawyerService, LawyerService>();
+builder.Services.AddScoped<TaskWhatsAppNotificationService>();
 
 // Cloudflare R2 object storage for case documents, task attachments, and message attachments.
 builder.Services.AddSingleton<IStorageService, CloudflareR2StorageService>();
 builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
 {
+    client.Timeout = TimeSpan.FromSeconds(20);
     // Layer 1: Enforce HTTPS policy for outgoing API integrations
     client.DefaultRequestHeaders.Add("User-Agent", "PLUG-SOLICITORS-CRM/2.0");
 });
@@ -199,9 +204,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-
-// Seed Database and ensure table creation upon startup
-await DbInitializer.InitializeAsync(app.Services);
+app.Services.GetRequiredService<ISecurityEncryptionService>();
 
 // HTTP Pipeline
 if (app.Environment.IsDevelopment())

@@ -81,6 +81,12 @@ h1,h2,h3,h4{ font-family:var(--font-display); }
 .btn-danger{ background:rgba(232,99,93,.12); color:var(--red); border:1px solid rgba(232,99,93,.3); }
 .btn-sm{ padding:6px 11px; font-size:12px; }
 .btn-block{ width:100%; justify-content:center; }
+.submit-progress{ width:min(100%,360px); margin-top:12px; }
+.submit-progress-label{ display:block; color:var(--text-muted); font-size:11px; margin-bottom:6px; }
+.submit-progress-track{ height:4px; overflow:hidden; border-radius:999px; background:var(--surface-3); }
+.submit-progress-bar{ display:block; width:38%; height:100%; border-radius:inherit; background:var(--accent); animation:submit-progress-slide 1.15s ease-in-out infinite; }
+@keyframes submit-progress-slide{ from{ transform:translateX(-110%); } to{ transform:translateX(270%); } }
+@media (prefers-reduced-motion:reduce){ .submit-progress-bar{ animation-duration:2.5s; } }
 .icon-btn-sm{ width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--line); }
 .icon-btn-sm:hover{ color:var(--text); }
 .icon-btn-sm.del:hover{ color:var(--red); border-color:rgba(232,99,93,.4); }
@@ -213,8 +219,6 @@ tr.clickable:hover{ background:var(--surface-2); cursor:pointer; }
 .login-error{ margin:0 0 16px; padding:10px 12px; border:1px solid rgba(232,99,93,.28); border-radius:6px; background:rgba(232,99,93,.08); }
 .login-submit{ min-height:48px; justify-content:center; border-radius:6px; font-size:13px; letter-spacing:.01em; transition:transform .2s,box-shadow .2s,background .2s; }
 .login-submit:not(:disabled):hover{ transform:translateY(-2px); background:#d1ad68; box-shadow:0 9px 22px rgba(198,161,91,.2); }
-.login-demo{ margin-top:28px; padding-top:19px; border-top:1px solid var(--line); color:#929896; font-size:11px; line-height:1.8; }
-.login-demo-title{ margin-bottom:5px; color:#d5d7d5; font-size:10px; font-weight:700; text-transform:uppercase; }
 .login-form-foot{ max-width:390px; width:100%; margin:42px auto 0; padding-top:15px; border-top:1px solid rgba(255,255,255,.07); color:#747b79; font-size:10.5px; }
 .role-toggle{ display:flex; gap:8px; margin-bottom:20px; }
 .demo-note{ font-size:11.5px; color:var(--text-muted); margin-top:16px; text-align:center; line-height:1.6; }

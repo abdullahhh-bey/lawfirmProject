@@ -6,6 +6,7 @@ import CaseForm from "../components/cases/CaseForm.jsx";
 import MultiLawyerSelector from "../components/lawyers/MultiLawyerSelector.jsx";
 import TaskList from "../components/tasks/TaskList.jsx";
 import DocumentManager from "../components/documents/DocumentManager.jsx";
+import SubmitProgress from "../components/ui/SubmitProgress.jsx";
 import { useApp } from "../context/AppContext.jsx";
 import {
   cases as casesApi,
@@ -264,10 +265,15 @@ export default function CreateCase() {
           >
             {saving ? "Saving…" : "Save Client / Case"}
           </button>
-          <button className="btn btn-ghost" onClick={() => nav(-1)}>
+          <button
+            className="btn btn-ghost"
+            onClick={() => nav(-1)}
+            disabled={saving}
+          >
             Cancel
           </button>
         </div>
+        {saving && <SubmitProgress label="Creating your case…" />}
       </div>
     </>
   );

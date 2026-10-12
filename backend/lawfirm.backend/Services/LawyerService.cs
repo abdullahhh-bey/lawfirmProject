@@ -47,7 +47,7 @@ public class LawyerService : ILawyerService
             Id = Guid.NewGuid(),
             FullName = dto.Name,
             Email = dto.Email.Trim().ToLower(),
-            PasswordHash = _authService.HashPassword(dto.Password ?? "password"),
+            PasswordHash = _authService.HashPassword(dto.Password),
             Phone = dto.Phone ?? "",
             Role = "lawyer",
             IsActive = true,

@@ -100,12 +100,12 @@ public class DocumentsController : ControllerBase
 
         if (redirect)
         {
-            // Generate Supabase temporary signed URL valid for 15 minutes
+            // Generate a temporary object-storage URL valid for 15 minutes.
             var signedUrl = await _storageService.GetSignedUrlAsync(storagePath, 900);
             return Redirect(signedUrl);
         }
 
-        // Stream file bytes directly from Supabase to client
+        // Stream and decrypt file bytes directly to the client.
         var stream = await _storageService.DownloadFileAsync(storagePath);
         return File(stream, mimeType, fileName);
     }

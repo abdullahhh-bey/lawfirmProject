@@ -26,13 +26,9 @@ public class SecurityEncryptionService : ISecurityEncryptionService
             keyBytes = Encoding.UTF8.GetBytes(masterKeyStr);
         }
 
-        if (keyBytes.Length < 32)
+        if (keyBytes.Length != 32)
         {
-            keyBytes = keyBytes.Concat(new byte[32 - keyBytes.Length]).ToArray();
-        }
-        else if (keyBytes.Length > 32)
-        {
-            keyBytes = keyBytes[..32];
+            throw new InvalidOperationException("Security encryption key must be exactly 32 bytes (AES-256), or a Base64 encoding of 32 bytes.");
         }
 
         _key = keyBytes;

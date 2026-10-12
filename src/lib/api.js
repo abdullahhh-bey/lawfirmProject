@@ -1,33 +1,19 @@
 // ================================================================
-// API CLIENT - Connected to ASP.NET Core 8 Backend & Supabase
+// API CLIENT - Connected to the ASP.NET Core 8 backend
 // ================================================================
 import { CASE_TYPES, caseTypeByCode } from '../data/nomenclature.js';
 
 export const API_BASE_URL = 'http://localhost:5067/api';
-
-function getAuthToken() {
-  try {
-    const s = JSON.parse(sessionStorage.getItem('session') || 'null');
-    return s?.token || null;
-  } catch {
-    return null;
-  }
-}
 
 function isFormData(value) {
   return typeof FormData !== 'undefined' && value instanceof FormData;
 }
 
 async function request(path, options = {}) {
-  const token = getAuthToken();
   const headers = { ...(options.headers || {}) };
 
   if (options.body && !isFormData(options.body)) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-  }
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
   }
 
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -69,7 +55,6 @@ export const auth = {
       name: data.session?.name || data.fullName || 'Admin',
       email: data.session?.email || data.email,
       role: (data.session?.role || data.role || 'lawyer').toLowerCase(),
-      token: data.token,
     };
 
     sessionStorage.setItem('session', JSON.stringify(session));
@@ -83,8 +68,14 @@ export const auth = {
     });
   },
 
-  logout() {
-    sessionStorage.removeItem('session');
+  async logout() {
+    try {
+      await request('/auth/logout', { method: 'POST' });
+    } catch {
+      // Clear the client session even when the backend cannot be reached.
+    } finally {
+      sessionStorage.removeItem('session');
+    }
   },
 
   getSession() {
@@ -92,6 +83,8 @@ export const auth = {
       const s = JSON.parse(sessionStorage.getItem('session') || 'null');
       if (s) {
         s.role = (s.role || 'lawyer').toLowerCase();
+        delete s.token;
+        sessionStorage.setItem('session', JSON.stringify(s));
       }
       return s;
     } catch {
@@ -288,14 +281,9 @@ export const cases = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = getAuthToken();
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
     const folderQuery = folderId ? `?folderId=${encodeURIComponent(folderId)}` : '';
     const res = await fetch(`${API_BASE_URL}/cases/${caseId}/documents/upload${folderQuery}`, {
       method: 'POST',
-      headers,
       body: formData,
       credentials: 'include',
     });
@@ -498,13 +486,8 @@ export const tasks = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = getAuthToken();
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
     const res = await fetch(`${API_BASE_URL}/tasks/${taskId}/attachments/upload`, {
       method: 'POST',
-      headers,
       body: formData,
       credentials: 'include',
     });
@@ -537,11 +520,9 @@ export const tasks = {
       throw new Error('This attachment has no stored file. Remove it and attach the original file again.');
     }
 
-    const token = getAuthToken();
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await fetch(
       `${API_BASE_URL}/tasks/${taskId}/attachments/${encodeURIComponent(attachment.id)}/download`,
-      { method: 'GET', credentials: 'include', headers },
+      { method: 'GET', credentials: 'include' },
     );
 
     if (!res.ok) {
@@ -603,7 +584,7 @@ export const lawyers = {
         name: data.name,
         email: data.email,
         phone: data.phone || '',
-        password: data.password || 'password',
+        password: data.password,
       }),
     });
   },
@@ -664,13 +645,8 @@ export const messaging = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = getAuthToken();
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
     const res = await fetch(`${API_BASE_URL}/messaging/attachments/upload`, {
       method: 'POST',
-      headers,
       body: formData,
       credentials: 'include',
     });
@@ -745,12 +721,10 @@ export const messaging = {
       throw new Error('This attachment has no stored file. Ask the sender to attach it again.');
     }
 
-    const token = getAuthToken();
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const params = new URLSearchParams({ storagePath: attachment.storagePath });
     const res = await fetch(
       `${API_BASE_URL}/messaging/attachments/download?${params}`,
-      { method: 'GET', credentials: 'include', headers },
+      { method: 'GET', credentials: 'include' },
     );
 
     if (!res.ok) {
@@ -883,14 +857,10 @@ export const whatsApp = {
     formData.append('phoneNumber', phoneNumber);
     if (caption) formData.append('caption', caption);
 
-    const token = getAuthToken();
-    const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
     const res = await fetch(`${API_BASE_URL}/whatsapp/send-file`, {
       method: 'POST',
-      headers,
       body: formData,
+      credentials: 'include',
     });
 
     if (!res.ok) {

@@ -18,12 +18,95 @@ public class WhatsAppService : IWhatsAppService
         _logger = logger;
     }
 
+    private static string GetValue(IConfiguration configuration, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            var value = configuration[key];
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value.Trim();
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string NormalizeBaseUrl(string? configuredUrl)
+    {
+        var url = (configuredUrl ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return "https://api.greenapi.com";
+        }
+
+        if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            url = $"https://{url}";
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return "https://api.greenapi.com";
+        }
+
+        return uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
+    }
+
+    private static string GetIdInstance(IConfiguration configuration)
+    {
+        var idInstance = GetValue(configuration,
+            "GreenApi:IdInstance",
+            "GreenApi:InstanceId",
+            "GreenApi:Id",
+            "IdInstance",
+            "GreenApi:Name");
+
+        if (!string.IsNullOrWhiteSpace(idInstance))
+        {
+            var match = Regex.Match(idInstance, @"\d+");
+            if (match.Success)
+            {
+                return match.Value;
+            }
+        }
+
+        return string.Empty;
+    }
+
     private (string baseUrl, string idInstance, string tokenInstance) GetConfig()
     {
-        var baseUrl = (_configuration["GreenApi:ApiUrl"] ?? "https://api.greenapi.com").TrimEnd('/');
-        var idInstance = (_configuration["GreenApi:IdInstance"] ?? "").Trim();
-        var tokenInstance = (_configuration["GreenApi:ApiTokenInstance"] ?? "").Trim();
+        var baseUrl = NormalizeBaseUrl(GetValue(_configuration,
+            "GreenApi:ApiUrl",
+            "GreenApi:BaseUrl",
+            "GreenApi:Url",
+            "GreenApi:LegacyApiUrl"));
+
+        var idInstance = GetIdInstance(_configuration);
+        var tokenInstance = GetValue(_configuration,
+            "GreenApi:ApiTokenInstance",
+            "GreenApi:TokenInstance",
+            "GreenApi:ApiToken",
+            "GreenApi:Token");
+
         return (baseUrl, idInstance, tokenInstance);
+    }
+
+    private string BuildInstanceUrl(string baseUrl, string idInstance)
+    {
+        if (string.IsNullOrWhiteSpace(idInstance))
+        {
+            return baseUrl.TrimEnd('/');
+        }
+
+        baseUrl = baseUrl.TrimEnd('/');
+        if (baseUrl.Contains("/waInstance", StringComparison.OrdinalIgnoreCase))
+        {
+            return baseUrl;
+        }
+
+        return $"{baseUrl}/waInstance{idInstance}";
     }
 
     private string FormatChatId(string phoneNumber)
@@ -72,18 +155,18 @@ public class WhatsAppService : IWhatsAppService
         var (baseUrl, idInstance, tokenInstance) = GetConfig();
         if (string.IsNullOrEmpty(idInstance) || string.IsNullOrEmpty(tokenInstance))
         {
-            _logger.LogWarning("[WhatsApp GreenAPI] IdInstance or ApiTokenInstance not configured in appsettings.json. Logged message: {Msg} to {Phone}", message, phoneNumber);
-            return (false, "Green API is not configured yet. Please set IdInstance and ApiTokenInstance in appsettings.json.");
+            _logger.LogWarning("[WhatsApp GreenAPI] Instance credentials are not configured.");
+            return (false, "Green API is not configured yet.");
         }
 
         var chatId = FormatChatId(phoneNumber);
         if (string.IsNullOrEmpty(chatId))
         {
-            _logger.LogError("[WhatsApp GreenAPI] Invalid phone number provided: {Phone}", phoneNumber);
-            return (false, $"Invalid phone number format: {phoneNumber}");
+            _logger.LogWarning("[WhatsApp GreenAPI] A message was not sent because the phone number format is invalid.");
+            return (false, "Invalid phone number format.");
         }
 
-        var url = $"{baseUrl}/waInstance{idInstance}/sendMessage/{tokenInstance}";
+        var url = $"{BuildInstanceUrl(baseUrl, idInstance)}/sendMessage/{Uri.EscapeDataString(tokenInstance)}";
 
         var payload = new
         {
@@ -96,27 +179,26 @@ public class WhatsAppService : IWhatsAppService
             var json = JsonSerializer.Serialize(payload);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync(url, content);
-            var responseStr = await response.Content.ReadAsStringAsync();
+            using var response = await _httpClient.PostAsync(url, content);
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("[WhatsApp GreenAPI] Successfully sent message to {ChatId}. Response: {Res}", chatId, responseStr);
+                _logger.LogInformation("[WhatsApp GreenAPI] Message sent successfully.");
                 return (true, "WhatsApp message sent successfully.");
             }
 
-            _logger.LogError("[WhatsApp GreenAPI] Failed to send message to {ChatId}. Status: {Status}, Response: {Res}", chatId, response.StatusCode, responseStr);
-            return (false, $"Green API error ({response.StatusCode}): {responseStr}");
+            _logger.LogWarning("[WhatsApp GreenAPI] Message delivery failed with status {Status}.", response.StatusCode);
+            return (false, $"Green API rejected the message ({response.StatusCode}).");
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "[WhatsApp GreenAPI] Network error sending text message to {Phone}", phoneNumber);
-            return (false, $"Network error connecting to Green API: {ex.Message}");
+            _logger.LogError("[WhatsApp GreenAPI] Network error sending text message ({ErrorType}).", ex.GetType().Name);
+            return (false, "Network error connecting to Green API.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[WhatsApp GreenAPI] Error sending text message to {Phone}", phoneNumber);
-            return (false, $"Error sending WhatsApp message: {ex.Message}");
+            _logger.LogError("[WhatsApp GreenAPI] Error sending text message ({ErrorType}).", ex.GetType().Name);
+            return (false, "Error sending WhatsApp message.");
         }
     }
 
@@ -125,18 +207,18 @@ public class WhatsAppService : IWhatsAppService
         var (baseUrl, idInstance, tokenInstance) = GetConfig();
         if (string.IsNullOrEmpty(idInstance) || string.IsNullOrEmpty(tokenInstance))
         {
-            _logger.LogWarning("[WhatsApp GreenAPI] IdInstance or ApiTokenInstance not configured in appsettings.json. Cannot send file {FileName} to {Phone}.", fileName, phoneNumber);
-            return (false, "Green API is not configured yet. Please set IdInstance and ApiTokenInstance in appsettings.json.");
+            _logger.LogWarning("[WhatsApp GreenAPI] Instance credentials are not configured.");
+            return (false, "Green API is not configured yet.");
         }
 
         var chatId = FormatChatId(phoneNumber);
         if (string.IsNullOrEmpty(chatId))
         {
-            _logger.LogError("[WhatsApp GreenAPI] Invalid phone number provided for file send: {Phone}", phoneNumber);
-            return (false, $"Invalid phone number format: {phoneNumber}");
+            _logger.LogWarning("[WhatsApp GreenAPI] A file was not sent because the phone number format is invalid.");
+            return (false, "Invalid phone number format.");
         }
 
-        var url = $"{baseUrl}/waInstance{idInstance}/sendFileByUpload/{tokenInstance}";
+        var url = $"{BuildInstanceUrl(baseUrl, idInstance)}/sendFileByUpload/{Uri.EscapeDataString(tokenInstance)}";
 
         try
         {
@@ -158,27 +240,26 @@ public class WhatsAppService : IWhatsAppService
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(mime);
             formData.Add(fileContent, "file", fileName ?? "file");
 
-            var response = await _httpClient.PostAsync(url, formData);
-            var responseStr = await response.Content.ReadAsStringAsync();
+            using var response = await _httpClient.PostAsync(url, formData);
 
             if (response.IsSuccessStatusCode)
             {
-                _logger.LogInformation("[WhatsApp GreenAPI] Successfully sent file {FileName} to {ChatId}. Response: {Res}", fileName, chatId, responseStr);
+                _logger.LogInformation("[WhatsApp GreenAPI] File sent successfully.");
                 return (true, "WhatsApp file sent successfully.");
             }
 
-            _logger.LogError("[WhatsApp GreenAPI] Failed to send file to {ChatId}. Status: {Status}, Response: {Res}", chatId, response.StatusCode, responseStr);
-            return (false, $"Green API error ({response.StatusCode}): {responseStr}");
+            _logger.LogWarning("[WhatsApp GreenAPI] File delivery failed with status {Status}.", response.StatusCode);
+            return (false, $"Green API rejected the file ({response.StatusCode}).");
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "[WhatsApp GreenAPI] Network error sending file {FileName} to {Phone}", fileName, phoneNumber);
-            return (false, $"Network error connecting to Green API: {ex.Message}");
+            _logger.LogError("[WhatsApp GreenAPI] Network error sending file ({ErrorType}).", ex.GetType().Name);
+            return (false, "Network error connecting to Green API.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[WhatsApp GreenAPI] Error sending file {FileName} to {Phone}", fileName, phoneNumber);
-            return (false, $"Error sending WhatsApp file: {ex.Message}");
+            _logger.LogError("[WhatsApp GreenAPI] Error sending file ({ErrorType}).", ex.GetType().Name);
+            return (false, "Error sending WhatsApp file.");
         }
     }
 }

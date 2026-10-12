@@ -93,7 +93,7 @@ public class TaskReminderBackgroundService : BackgroundService
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to send automated WhatsApp reminder to lawyer {Phone}", lawyer.Phone);
+                        _logger.LogError("Failed to send automated WhatsApp reminder ({ErrorType}).", ex.GetType().Name);
                     }
                 }
 

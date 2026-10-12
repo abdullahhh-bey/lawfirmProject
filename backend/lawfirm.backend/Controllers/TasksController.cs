@@ -14,11 +14,19 @@ public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
     private readonly IStorageService _storageService;
+    private readonly TaskWhatsAppNotificationService _taskNotificationService;
+    private readonly ILogger<TasksController> _logger;
 
-    public TasksController(ITaskService taskService, IStorageService storageService)
+    public TasksController(
+        ITaskService taskService,
+        IStorageService storageService,
+        TaskWhatsAppNotificationService taskNotificationService,
+        ILogger<TasksController> logger)
     {
         _taskService = taskService;
         _storageService = storageService;
+        _taskNotificationService = taskNotificationService;
+        _logger = logger;
     }
 
     private Guid CurrentUserId
@@ -61,6 +69,14 @@ public class TasksController : ControllerBase
         try
         {
             var task = await _taskService.CreateTaskAsync(dto, CurrentUserId, CurrentUserRole);
+            try
+            {
+                await _taskNotificationService.SendTaskCreatedNotificationsAsync(task.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Task {TaskId} was created, but WhatsApp notification processing failed.", task.Id);
+            }
             return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
         }
         catch (KeyNotFoundException)

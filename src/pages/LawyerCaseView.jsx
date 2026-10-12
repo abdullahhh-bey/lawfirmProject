@@ -14,6 +14,7 @@ import { caseTypeByCode } from "../data/nomenclature.js";
 import { useApp } from "../context/AppContext.jsx";
 
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
+import SubmitProgress from "../components/ui/SubmitProgress.jsx";
 
 export default function LawyerCaseView() {
   const { id } = useParams();
@@ -281,6 +282,7 @@ export default function LawyerCaseView() {
                     Cancel
                   </button>
                 </div>
+                {savingTask && <SubmitProgress label="Saving task…" />}
               </div>
             )}
             <TaskList

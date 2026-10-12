@@ -29,8 +29,7 @@ public class WhatsAppController : ControllerBase
         return Ok(new
         {
             isConfigured,
-            idInstance = isConfigured ? idInstance : null,
-            message = isConfigured ? "Green API configured." : "Green API not configured yet. Add IdInstance and ApiTokenInstance in appsettings.json."
+            message = isConfigured ? "Green API configured." : "Green API not configured yet."
         });
     }
 

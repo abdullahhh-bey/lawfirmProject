@@ -61,7 +61,7 @@ export default function Login() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@firm.com"
+                  placeholder="any@example.com"
                   autoComplete="username"
                   autoFocus
                 />
@@ -89,12 +89,6 @@ export default function Login() {
                 {busy ? "Signing in…" : "Sign in"}
               </button>
             </form>
-
-            <div className="login-demo">
-              <div className="login-demo-title">Demo access</div>
-              <div>Admin · admin@firm.com / admin</div>
-              <div>Advocate · s.jennings@firm.com / password</div>
-            </div>
           </div>
           <div className="login-form-foot">
             Secure access for firm personnel

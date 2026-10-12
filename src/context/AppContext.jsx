@@ -1,5 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { auth } from '../lib/api.js';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { auth } from "../lib/api.js";
 
 const AppContext = createContext(null);
 
@@ -13,7 +19,10 @@ export function AppProvider({ children }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const showToast = useCallback((message, type = 'success') => setToast({ message, type }), []);
+  const showToast = useCallback(
+    (message, type = "success") => setToast({ message, type }),
+    [],
+  );
 
   const login = useCallback(async (email, password) => {
     const s = await auth.login(email, password);
@@ -22,7 +31,7 @@ export function AppProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
-    auth.logout();
+    void auth.logout();
     setSession(null);
   }, []);
 
@@ -36,6 +45,6 @@ export function AppProvider({ children }) {
 
 export function useApp() {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useApp must be used within AppProvider');
+  if (!ctx) throw new Error("useApp must be used within AppProvider");
   return ctx;
 }

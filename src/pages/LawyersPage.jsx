@@ -13,7 +13,7 @@ import { useApp } from "../context/AppContext.jsx";
 
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 
-const emptyLawyer = { name: "", email: "", phone: "", password: "password" };
+const emptyLawyer = { name: "", email: "", phone: "", password: "" };
 
 export default function LawyersPage() {
   const { showToast } = useApp();
@@ -171,6 +171,10 @@ export default function LawyersPage() {
             <div className="field" style={{ marginBottom: 0 }}>
               <label>Temporary Password</label>
               <input
+                type="password"
+                autoComplete="new-password"
+                minLength={6}
+                required
                 value={draft.password}
                 onChange={(e) =>
                   setDraft({ ...draft, password: e.target.value })

@@ -8,6 +8,7 @@ import Calendar from "../components/calendar/Calendar.jsx";
 import MessageComposer from "../components/messaging/MessageComposer.jsx";
 import NotificationStatus from "../components/messaging/NotificationStatus.jsx";
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
+import SubmitProgress from "../components/ui/SubmitProgress.jsx";
 import {
   cases as casesApi,
   clients as clientsApi,
@@ -41,6 +42,7 @@ export default function CaseDetailsPage() {
   const [tab, setTab] = useState("overview");
   const [composerFor, setComposerFor] = useState(null);
   const [draftTask, setDraftTask] = useState(null);
+  const [savingTask, setSavingTask] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -136,7 +138,8 @@ export default function CaseDetailsPage() {
   }
 
   async function saveDraftTask() {
-    if (!draftTask.name.trim()) return;
+    if (!draftTask.name.trim() || savingTask) return;
+    setSavingTask(true);
     try {
       const created = await tasksApi.create({
         ...draftTask,
@@ -147,6 +150,8 @@ export default function CaseDetailsPage() {
       showToast("Task added.");
     } catch (e) {
       showToast(e.message, "error");
+    } finally {
+      setSavingTask(false);
     }
   }
 
@@ -361,9 +366,11 @@ export default function CaseDetailsPage() {
                 <button
                   className="btn btn-primary btn-sm"
                   onClick={saveDraftTask}
+                  disabled={savingTask}
                 >
-                  Save Task
+                  {savingTask ? "Saving…" : "Save Task"}
                 </button>
+                {savingTask && <SubmitProgress label="Saving task…" />}
               </div>
             )}
             <TaskList

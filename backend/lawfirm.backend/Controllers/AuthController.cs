@@ -91,19 +91,4 @@ public class AuthController : ControllerBase
         return Ok(new { message });
     }
 
-    // TEST ENDPOINT FOR ADMIN
-    [HttpGet("admin-only-test")]
-    [Authorize(Roles = "admin")]
-    public IActionResult AdminOnlyTest()
-    {
-        return Ok(new { message = "Access granted. You are authenticated as an Admin." });
-    }
-
-    // TEST ENDPOINT FOR LAWYER
-    [HttpGet("lawyer-only-test")]
-    [Authorize(Roles = "lawyer")]
-    public IActionResult LawyerOnlyTest()
-    {
-        return Ok(new { message = "Access granted. You are authenticated as an Advocate." });
-    }
 }
