@@ -44,6 +44,16 @@ static string LoadOrCreateSecureSecret(IConfiguration configuration, string envi
 
 var builder = WebApplication.CreateBuilder(args);
 
+var isDevelopment = builder.Environment.IsDevelopment();
+if (isDevelopment)
+{
+    var developmentConfigPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "lawfirm-crm",
+        "development-services.json");
+    builder.Configuration.AddJsonFile(developmentConfigPath, optional: true, reloadOnChange: true);
+}
+
 builder.Configuration.AddEnvironmentVariables();
 
 var jwtKey = LoadOrCreateSecureSecret(builder.Configuration, "JWT_SECRET", "Jwt:Key", 32, "jwt-secret.txt", builder.Environment.IsDevelopment());
@@ -62,10 +72,16 @@ builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionServ
 
 // LAYER 1: DATABASE CONTEXT & TLS/SSL IN-TRANSIT SECURITY
 // Enforces SSL Mode=Require on the PostgreSQL connection
-var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? builder.Configuration["DATABASE_URL"]
-    ?? throw new InvalidOperationException("Database connection string missing");
+var connectionString = isDevelopment
+    ? builder.Configuration["Development:ConnectionStrings:DefaultConnection"]
+    : builder.Configuration.GetConnectionString("DefaultConnection")
+      ?? builder.Configuration["DATABASE_URL"];
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(isDevelopment
+        ? "Development database connection string is missing."
+        : "Database connection string missing");
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -98,7 +114,10 @@ builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>(client =>
     // Layer 1: Enforce HTTPS policy for outgoing API integrations
     client.DefaultRequestHeaders.Add("User-Agent", "PLUG-SOLICITORS-CRM/2.0");
 });
-builder.Services.AddHostedService<TaskReminderBackgroundService>();
+if (!isDevelopment || builder.Configuration.GetValue<bool>("Development:EnableTaskReminderBackgroundService"))
+{
+    builder.Services.AddHostedService<TaskReminderBackgroundService>();
+}
 
 // LAYER 4: AUTHENTICATION, JWT SIGNING & HTTPONLY SECURE COOKIE TRANSPORT
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
@@ -149,8 +168,10 @@ builder.Services.AddAuthorization(options =>
 });
 
 // CORS for React Frontend (Vite on :5173)
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? new[] { "http://localhost:5173", "https://localhost:5173" };
+var allowedOrigins = isDevelopment
+    ? new[] { "http://localhost:5173", "https://localhost:5173" }
+    : builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+      ?? new[] { "http://localhost:5173", "https://localhost:5173" };
 
 builder.Services.AddCors(options =>
 {

@@ -3,7 +3,10 @@
 // ================================================================
 import { CASE_TYPES, caseTypeByCode } from '../data/nomenclature.js';
 
-export const API_BASE_URL = 'https://app.plugsolicitors.com/api';
+const productionApiBaseUrl = 'https://app.plugsolicitors.com/api';
+const developmentApiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5067/api';
+
+export const API_BASE_URL = import.meta.env.DEV ? developmentApiBaseUrl : productionApiBaseUrl;
 
 const inFlightMutations = new Map();
 

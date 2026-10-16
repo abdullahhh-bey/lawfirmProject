@@ -11,18 +11,24 @@ public class WhatsAppController : ControllerBase
 {
     private readonly IWhatsAppService _whatsAppService;
     private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _environment;
 
-    public WhatsAppController(IWhatsAppService whatsAppService, IConfiguration configuration)
+    public WhatsAppController(
+        IWhatsAppService whatsAppService,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         _whatsAppService = whatsAppService;
         _configuration = configuration;
+        _environment = environment;
     }
 
     [HttpGet("status")]
     public IActionResult GetStatus()
     {
-        var idInstance = (_configuration["GreenApi:IdInstance"] ?? "").Trim();
-        var tokenInstance = (_configuration["GreenApi:ApiTokenInstance"] ?? "").Trim();
+        var section = _environment.IsDevelopment() ? "Development:GreenApi" : "GreenApi";
+        var idInstance = (_configuration[$"{section}:IdInstance"] ?? "").Trim();
+        var tokenInstance = (_configuration[$"{section}:ApiTokenInstance"] ?? "").Trim();
 
         var isConfigured = !string.IsNullOrEmpty(idInstance) && !string.IsNullOrEmpty(tokenInstance);
 

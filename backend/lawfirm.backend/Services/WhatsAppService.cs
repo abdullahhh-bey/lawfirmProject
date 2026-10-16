@@ -9,12 +9,18 @@ public class WhatsAppService : IWhatsAppService
 {
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _environment;
     private readonly ILogger<WhatsAppService> _logger;
 
-    public WhatsAppService(HttpClient httpClient, IConfiguration configuration, ILogger<WhatsAppService> logger)
+    public WhatsAppService(
+        HttpClient httpClient,
+        IConfiguration configuration,
+        IHostEnvironment environment,
+        ILogger<WhatsAppService> logger)
     {
         _httpClient = httpClient;
         _configuration = configuration;
+        _environment = environment;
         _logger = logger;
     }
 
@@ -54,14 +60,14 @@ public class WhatsAppService : IWhatsAppService
         return uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
     }
 
-    private static string GetIdInstance(IConfiguration configuration)
+    private static string GetIdInstance(IConfiguration configuration, string prefix)
     {
         var idInstance = GetValue(configuration,
-            "GreenApi:IdInstance",
-            "GreenApi:InstanceId",
-            "GreenApi:Id",
-            "IdInstance",
-            "GreenApi:Name");
+            $"{prefix}GreenApi:IdInstance",
+            $"{prefix}GreenApi:InstanceId",
+            $"{prefix}GreenApi:Id",
+            $"{prefix}IdInstance",
+            $"{prefix}GreenApi:Name");
 
         if (!string.IsNullOrWhiteSpace(idInstance))
         {
@@ -77,18 +83,19 @@ public class WhatsAppService : IWhatsAppService
 
     private (string baseUrl, string idInstance, string tokenInstance) GetConfig()
     {
+        var prefix = _environment.IsDevelopment() ? "Development:" : "";
         var baseUrl = NormalizeBaseUrl(GetValue(_configuration,
-            "GreenApi:ApiUrl",
-            "GreenApi:BaseUrl",
-            "GreenApi:Url",
-            "GreenApi:LegacyApiUrl"));
+            $"{prefix}GreenApi:ApiUrl",
+            $"{prefix}GreenApi:BaseUrl",
+            $"{prefix}GreenApi:Url",
+            $"{prefix}GreenApi:LegacyApiUrl"));
 
-        var idInstance = GetIdInstance(_configuration);
+        var idInstance = GetIdInstance(_configuration, prefix);
         var tokenInstance = GetValue(_configuration,
-            "GreenApi:ApiTokenInstance",
-            "GreenApi:TokenInstance",
-            "GreenApi:ApiToken",
-            "GreenApi:Token");
+            $"{prefix}GreenApi:ApiTokenInstance",
+            $"{prefix}GreenApi:TokenInstance",
+            $"{prefix}GreenApi:ApiToken",
+            $"{prefix}GreenApi:Token");
 
         return (baseUrl, idInstance, tokenInstance);
     }

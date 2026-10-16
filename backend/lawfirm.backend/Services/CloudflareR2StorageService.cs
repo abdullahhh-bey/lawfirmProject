@@ -12,20 +12,25 @@ public class CloudflareR2StorageService : IStorageService
 
     public CloudflareR2StorageService(
         IConfiguration configuration,
+        IHostEnvironment environment,
         ISecurityEncryptionService encryptionService,
         ILogger<CloudflareR2StorageService> logger)
     {
         _encryptionService = encryptionService;
         _logger = logger;
 
-        var accessKey = configuration["CloudflareR2:AccessKeyId"]
-            ?? throw new InvalidOperationException("CloudflareR2:AccessKeyId is missing.");
-        var secretKey = configuration["CloudflareR2:SecretAccessKey"]
-            ?? throw new InvalidOperationException("CloudflareR2:SecretAccessKey is missing.");
-        var serviceUrl = configuration["CloudflareR2:ServiceUrl"]
-            ?? throw new InvalidOperationException("CloudflareR2:ServiceUrl is missing.");
+        var section = environment.IsDevelopment() ? "Development:CloudflareR2" : "CloudflareR2";
+        var accessKey = configuration[$"{section}:AccessKeyId"]
+            ?? throw new InvalidOperationException($"{section}:AccessKeyId is missing.");
+        var secretKey = configuration[$"{section}:SecretAccessKey"]
+            ?? throw new InvalidOperationException($"{section}:SecretAccessKey is missing.");
+        var serviceUrl = configuration[$"{section}:ServiceUrl"]
+            ?? throw new InvalidOperationException($"{section}:ServiceUrl is missing.");
 
-        _bucketName = configuration["CloudflareR2:BucketName"] ?? "lawfirm-documents";
+        _bucketName = configuration[$"{section}:BucketName"]
+            ?? (environment.IsDevelopment()
+                ? throw new InvalidOperationException($"{section}:BucketName is missing.")
+                : "lawfirm-documents");
 
         var config = new AmazonS3Config
         {
