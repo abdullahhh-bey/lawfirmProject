@@ -9,6 +9,7 @@ import MessageComposer from "../components/messaging/MessageComposer.jsx";
 import NotificationStatus from "../components/messaging/NotificationStatus.jsx";
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import SubmitProgress from "../components/ui/SubmitProgress.jsx";
+import ConfirmDialog from "../components/ui/ConfirmDialog.jsx";
 import {
   cases as casesApi,
   clients as clientsApi,
@@ -46,6 +47,7 @@ export default function CaseDetailsPage() {
   const [savingTask, setSavingTask] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const isAdmin = session?.role === "admin";
   const historyReturnPath = location.state?.returnTo;
@@ -227,35 +229,27 @@ export default function CaseDetailsPage() {
     }
   }
 
-  async function cancelCase() {
-    if (
-      !window.confirm(
-        `Cancel case ${caseRecord.caseId}? Status will be set to Cancelled.`,
-      )
-    )
-      return;
+  async function confirmCancelCase() {
     try {
       const updated = await casesApi.setStatus(caseRecord.id, "Cancelled");
       setCaseRecord(updated);
       showToast(`Case ${caseRecord.caseId} status changed to Cancelled.`);
     } catch (e) {
       showToast(e.message, "error");
+    } finally {
+      setConfirmAction(null);
     }
   }
 
-  async function deleteCase() {
-    if (
-      !window.confirm(
-        `PERMANENTLY DELETE case ${caseRecord.caseId}? This action cannot be undone.`,
-      )
-    )
-      return;
+  async function confirmDeleteCase() {
     try {
       await casesApi.remove(caseRecord.id);
       showToast(`Case ${caseRecord.caseId} permanently deleted.`);
       nav("/cases");
     } catch (e) {
       showToast(e.message, "error");
+    } finally {
+      setConfirmAction(null);
     }
   }
 
@@ -324,7 +318,10 @@ export default function CaseDetailsPage() {
                 </button>
               ))}
             {caseRecord.status !== "Cancelled" && (
-              <button className="btn btn-secondary" onClick={cancelCase}>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setConfirmAction({ type: "cancel" })}
+              >
                 Cancel Case
               </button>
             )}
@@ -338,7 +335,10 @@ export default function CaseDetailsPage() {
               </button>
             )}
             {isAdmin && (
-              <button className="btn btn-danger" onClick={deleteCase}>
+              <button
+                className="btn btn-danger"
+                onClick={() => setConfirmAction({ type: "delete" })}
+              >
                 Delete Case
               </button>
             )}
@@ -459,6 +459,54 @@ export default function CaseDetailsPage() {
           lawyer={composerFor}
           onClose={() => setComposerFor(null)}
           onSent={() => showToast("Message sent.")}
+        />
+      )}
+
+      {confirmAction?.type === "delete" && (
+        <ConfirmDialog
+          activity="DELETING CASE"
+          title={`Permanently delete case ${caseRecord.caseId}?`}
+          message="Are you sure you want to delete this case? All associated tasks, records, and linked files will be permanently erased."
+          confirmLabel="Yes, Delete Case"
+          cancelLabel="No, Keep Case"
+          danger
+          variant="danger"
+          details={[
+            { label: "Case ID", value: caseRecord.caseId, mono: true },
+            ...(caseRecord.legacyCaseId
+              ? [{ label: "Previous Case ID", value: caseRecord.legacyCaseId, mono: true }]
+              : []),
+            { label: "Client", value: client?.name || "—" },
+            { label: "Matter", value: caseRecord.matter || "—" },
+          ]}
+          impactNotes={[
+            "This action cannot be undone.",
+            "Case data, timeline, and task history will be permanently deleted.",
+          ]}
+          onConfirm={confirmDeleteCase}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
+
+      {confirmAction?.type === "cancel" && (
+        <ConfirmDialog
+          activity="CANCELLING CASE"
+          title={`Cancel case ${caseRecord.caseId}?`}
+          message="Are you sure you want to cancel this case? The case status will be set to Cancelled, but all records will remain safely in the system."
+          confirmLabel="Yes, Cancel Case"
+          cancelLabel="No, Keep Active"
+          variant="warning"
+          details={[
+            { label: "Case ID", value: caseRecord.caseId, mono: true },
+            { label: "Client", value: client?.name || "—" },
+            { label: "Current Status", value: caseRecord.status },
+          ]}
+          impactNotes={[
+            "Status will be marked as Cancelled.",
+            "Documents, tasks, and history are preserved.",
+          ]}
+          onConfirm={confirmCancelCase}
+          onCancel={() => setConfirmAction(null)}
         />
       )}
     </>

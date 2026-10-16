@@ -214,10 +214,25 @@ export default function LawyersPage() {
 
       {deleteTarget && (
         <ConfirmDialog
-          title="Delete advocate account?"
-          message={`This removes ${deleteTarget.name}'s account. Any cases assigned to them will fall back to Unassigned, and they'll be removed from any tasks. This can't be undone.`}
-          confirmLabel="Delete"
+          activity="DELETING ADVOCATE"
+          title={`Remove advocate ${deleteTarget.name}?`}
+          message="Are you sure you want to delete this advocate account? They will lose access to the portal immediately."
+          confirmLabel="Yes, Delete Advocate"
+          cancelLabel="No, Keep Advocate"
           danger
+          variant="danger"
+          details={[
+            { label: "Advocate Name", value: deleteTarget.name },
+            { label: "Email", value: deleteTarget.email },
+            ...(deleteTarget.phone
+              ? [{ label: "Phone", value: deleteTarget.phone }]
+              : []),
+          ]}
+          impactNotes={[
+            "This action cannot be undone.",
+            "Assigned cases will automatically revert to Unassigned.",
+            "They will be unassigned from all pending tasks.",
+          ]}
           onConfirm={confirmDelete}
           onCancel={() => setDeleteTarget(null)}
         />
