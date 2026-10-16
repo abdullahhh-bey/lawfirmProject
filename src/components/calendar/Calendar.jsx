@@ -60,99 +60,104 @@ export default function Calendar({ tasks = [], caseMetaFor, onTaskClick }) {
   }, [tasks, caseMetaFor]);
 
   return (
-    <div className="card">
-      <div className="card-head">
-        <h3>{label}</h3>
-        <div style={{ display: "flex", gap: 6 }}>
+    <section className="card calendar-card" aria-label={`${label} calendar`}>
+      <div className="calendar-toolbar">
+        <div className="calendar-heading">
+          <span className="calendar-kicker">Schedule</span>
+          <h2>{label}</h2>
+        </div>
+        <div className="calendar-controls" aria-label="Calendar navigation">
           <button
-            className="icon-btn-sm"
+            type="button"
+            className="icon-btn-sm calendar-nav-btn"
+            aria-label="Previous month"
             onClick={() =>
               setCursor(
                 new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1),
               )
             }
           >
-            ‹
+            <span aria-hidden="true">‹</span>
           </button>
-          <button className="icon-btn-sm" onClick={() => setCursor(new Date())}>
+          <button
+            type="button"
+            className="calendar-today-btn"
+            onClick={() => setCursor(new Date())}
+          >
             Today
           </button>
           <button
-            className="icon-btn-sm"
+            type="button"
+            className="icon-btn-sm calendar-nav-btn"
+            aria-label="Next month"
             onClick={() =>
               setCursor(
                 new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1),
               )
             }
           >
-            ›
+            <span aria-hidden="true">›</span>
           </button>
         </div>
       </div>
-      <div className="cal-grid" style={{ marginBottom: 8 }}>
-        {DOW.map((d) => (
-          <div key={d} className="cal-dow">
-            {d}
-          </div>
-        ))}
+      <div className="calendar-legend" aria-label="Calendar item legend">
+        <span><i className="calendar-legend-dot due" />Task due</span>
+        <span><i className="calendar-legend-dot reminder" />3-day reminder</span>
       </div>
-      <div className="cal-grid">
-        {cells.map((key, i) => {
-          if (!key) return <div key={i} className="cal-cell empty" />;
-          const items = tasksByDay[key] || [];
-          return (
-            <div
-              key={key}
-              className={`cal-cell${key === todayKey ? " today" : ""}`}
-            >
-              <div className="cal-daynum">{Number(key.slice(-2))}</div>
-              {items.slice(0, 3).map((t, idx) => (
-                <div
-                  key={t.id + t.kind + idx}
-                  className={`cal-task-pill${t.kind === "reminder" ? " reminder" : ""}`}
-                  title={`${t.name}${caseMetaFor?.(t)?.caseId ? " · " + caseMetaFor(t).caseId : ""}${t.reminderSent ? " (WhatsApp Reminder Sent ✓)" : ""}`}
-                  onClick={() => onTaskClick?.(t)}
-                  style={{
-                    cursor: onTaskClick ? "pointer" : "default",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 3,
-                  }}
-                >
-                  <span>{t.kind === "reminder" ? "⏰" : ""}</span>
-                  <span
-                    style={{
-                      flex: 1,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {t.name}
-                  </span>
-                  {(t.reminderSent || t.kind === "reminder") && (
-                    <span
-                      title="WhatsApp Reminder Sent"
-                      style={{
-                        color: "#22c55e",
-                        fontWeight: "bold",
-                        fontSize: 11,
-                      }}
-                    >
-                      {t.reminderSent ? "✅" : ""}
-                    </span>
+      <div className="calendar-scroll">
+        <div className="cal-grid calendar-weekdays">
+          {DOW.map((d) => (
+            <div key={d} className="cal-dow">
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="cal-grid calendar-days">
+          {cells.map((key, i) => {
+            if (!key) return <div key={i} className="cal-cell empty" aria-hidden="true" />;
+            const items = tasksByDay[key] || [];
+            return (
+              <div
+                key={key}
+                className={`cal-cell${key === todayKey ? " today" : ""}`}
+                aria-current={key === todayKey ? "date" : undefined}
+              >
+                <div className="cal-daynum">
+                  <span>{Number(key.slice(-2))}</span>
+                  {key === todayKey && <span className="calendar-today-label">Today</span>}
+                </div>
+                <div className="calendar-day-items">
+                  {items.slice(0, 3).map((t, idx) => {
+                    const caseId = caseMetaFor?.(t)?.caseId;
+                    const title = `${t.name}${caseId ? ` · ${caseId}` : ""}${t.reminderSent ? " (WhatsApp Reminder Sent)" : ""}`;
+                    return (
+                      <button
+                        key={`${t.id}${t.kind}${idx}`}
+                        type="button"
+                        className={`cal-task-pill${t.kind === "reminder" ? " reminder" : ""}${onTaskClick ? " clickable" : ""}`}
+                        title={title}
+                        onClick={() => onTaskClick?.(t)}
+                        disabled={!onTaskClick}
+                      >
+                        {t.kind === "reminder" && <span aria-hidden="true">⏰</span>}
+                        <span className="calendar-task-name">{t.name}</span>
+                        {t.reminderSent && (
+                          <span className="calendar-reminder-sent" title="WhatsApp reminder sent" aria-label="WhatsApp reminder sent">
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {items.length > 3 && (
+                    <span className="calendar-more">+{items.length - 3} more</span>
                   )}
                 </div>
-              ))}
-              {items.length > 3 && (
-                <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
-                  +{items.length - 3} more
-                </div>
-              )}
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

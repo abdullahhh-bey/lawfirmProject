@@ -187,7 +187,14 @@ export default function AdminDashboard() {
                       className="clickable"
                       onClick={() => window.location.assign(`/cases/${c.id}`)}
                     >
-                      <td className="mono">{c.caseId}</td>
+                      <td className="mono">
+                        <div>{c.caseId}</div>
+                        {c.legacyCaseId && (
+                          <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                            Prev: {c.legacyCaseId}
+                          </div>
+                        )}
+                      </td>
                       <td>{clientName(c.clientId)}</td>
                       <td>
                         {(c.assignedLawyerIds || []).length

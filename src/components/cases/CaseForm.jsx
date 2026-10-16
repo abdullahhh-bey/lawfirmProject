@@ -26,7 +26,25 @@ export default function CaseForm({ value, onChange, caseIdPreview, errors = {} }
           <div style={{ background: 'var(--surface-2)', border: '1.5px dashed var(--line)', borderRadius: 9, padding: '10px 13px', fontFamily: 'var(--font-mono)', color: value.caseTypeCode ? 'var(--accent)' : 'var(--text-muted)', fontSize: 13.5, fontWeight: 700 }}>
             {value.caseTypeCode ? caseIdPreview : 'Select a case type to preview'}
           </div>
-          <div className="field-hint">Auto-generated on save · never editable afterward.</div>
+          <div className="field-hint">Auto-generated sequential CRM ID.</div>
+        </div>
+      </div>
+
+      <div className="field">
+        <label>
+          Previous Case ID / Physical File Ref{" "}
+          <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: 12 }}>
+            (Optional — for existing/backlog cases)
+          </span>
+        </label>
+        <input
+          placeholder="e.g. OLD-FAM-042 or 2022/CIVIL/109"
+          value={value.legacyCaseId || ''}
+          onChange={set('legacyCaseId')}
+          maxLength={100}
+        />
+        <div className="field-hint">
+          If this case already had an ID from your previous case register or paper file, enter it here. You can search by either ID anywhere in the CRM.
         </div>
       </div>
 

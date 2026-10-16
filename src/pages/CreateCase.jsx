@@ -16,6 +16,7 @@ import {
 
 const emptyClient = { name: "", phone: "", email: "", address: "", notes: "" };
 const emptyCase = {
+  legacyCaseId: "",
   caseTypeCode: "",
   ourRef: "",
   matter: "",

@@ -3,7 +3,9 @@
 // ================================================================
 import { CASE_TYPES, caseTypeByCode } from '../data/nomenclature.js';
 
-export const API_BASE_URL = 'https://app.plugsolicitors.com/api';
+const productionApiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || 'https://app.plugsolicitors.com/api';
+export const API_BASE_URL = import.meta.env.DEV ? '/api' : productionApiBaseUrl;
 
 const inFlightMutations = new Map();
 
@@ -338,6 +340,7 @@ export const cases = {
     const res = await request('/cases', {
       method: 'POST',
       body: JSON.stringify({
+        legacyCaseId: data.legacyCaseId ? data.legacyCaseId.trim() : null,
         caseTypeCode: data.caseTypeCode,
         clientId: data.clientId,
         ourRef: data.ourRef || '',
@@ -378,6 +381,15 @@ export const cases = {
         piFieldsJson: typeof data.piFields === 'string' ? data.piFields : JSON.stringify(data.piFields || {}),
         notes: data.notes,
       }),
+    });
+    return transformCase(res);
+  },
+
+  async updateLegacyCaseId(id, legacyCaseId) {
+    clearCache('cases');
+    const res = await request(`/cases/${id}/legacy-case-id`, {
+      method: 'PUT',
+      body: JSON.stringify({ legacyCaseId: legacyCaseId || null }),
     });
     return transformCase(res);
   },

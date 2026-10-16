@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useApp } from "../../context/AppContext.jsx";
-import logoUrl from "../ui/Gemini_Generated_Image_gehpycgehpycgehp.png?url";
+import logoUrl from "../ui/lawfirmLOGO.jpg?url";
 
 const icon = (path) => (
   <svg

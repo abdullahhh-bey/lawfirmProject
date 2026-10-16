@@ -42,7 +42,7 @@ export default function LawyerMessagesPage() {
   return (
     <>
       <Topbar />
-      <div className="page">
+      <div className="page messaging-page">
         <div className="page-head">
           <div>
             <h1>Messages</h1>
@@ -51,9 +51,9 @@ export default function LawyerMessagesPage() {
             </div>
           </div>
         </div>
-        <div className="msg-thread">
+        <div className="msg-thread messaging-inbox">
           {msgs.length === 0 && (
-            <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+            <div className="messaging-empty">
               No messages yet.
             </div>
           )}
@@ -62,39 +62,32 @@ export default function LawyerMessagesPage() {
             return (
               <div
                 key={m.id}
-                className="msg-log-row clickable"
-                style={{
-                  alignItems: "flex-start",
-                  flexDirection: "column",
-                  gap: 6,
-                  cursor: "pointer",
-                }}
+                className={`msg-log-row messaging-message-card${st === "Seen" ? "" : " unread"}`}
                 onClick={() => open(m)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    open(m);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${m.type} message sent ${new Date(m.createdAt).toLocaleString()}`}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                  }}
-                >
-                  <span
-                    className="chip"
-                    style={{ textTransform: "capitalize" }}
-                  >
-                    {m.type}
-                  </span>
-                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                    {new Date(m.createdAt).toLocaleString()}
-                  </span>
+                <div className="messaging-message-meta">
+                  <span className="messaging-type">{m.type}</span>
+                  <time dateTime={m.createdAt}>{new Date(m.createdAt).toLocaleString()}</time>
                 </div>
-                {m.text && <div style={{ fontSize: 13 }}>{m.text}</div>}
+                {m.text && <p className="messaging-message-text">{m.text}</p>}
                 <AttachmentList
                   attachments={m.attachments}
                   compact
                   onDownload={downloadAttachment}
                 />
-                <span className={`badge ${st.toLowerCase()}`}>{st}</span>
+                <div className="messaging-message-status">
+                  <span className={`badge ${st.toLowerCase()}`}>{st}</span>
+                  {st !== "Seen" && <span className="messaging-unread-label">New message</span>}
+                </div>
               </div>
             );
           })}

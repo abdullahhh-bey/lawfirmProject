@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext.jsx";
-import logoUrl from "../components/ui/Gemini_Generated_Image_gehpycgehpycgehp.png?url";
+import logoUrl from "../components/ui/lawfirmLOGO.jpg?url";
 
 export default function Login() {
   const { login } = useApp();
@@ -93,6 +93,7 @@ export default function Login() {
           <div className="login-form-foot">
             Secure access for firm personnel
           </div>
+          <div className="login-credit">Made by FutureSort Technologies</div>
         </section>
       </main>
     </div>

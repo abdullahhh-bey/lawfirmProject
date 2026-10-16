@@ -1,18 +1,41 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
-export default function Modal({ title, sub, onClose, children, maxWidth }) {
-  return (
+export default function Modal({ title, sub, onClose, children, maxWidth, className = '' }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') onClose();
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  return createPortal(
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-box" style={maxWidth ? { maxWidth } : undefined}>
+      <section
+        className={`modal-box${className ? ` ${className}` : ''}`}
+        style={maxWidth ? { maxWidth } : undefined}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         <div className="modal-head">
           <div>
-            <h3>{title}</h3>
+            <h3 id="modal-title">{title}</h3>
             {sub && <div className="sub">{sub}</div>}
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Close dialog">✕</button>
         </div>
         {children}
-      </div>
-    </div>
+      </section>
+    </div>,
+    document.body,
   );
 }

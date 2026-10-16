@@ -85,6 +85,10 @@ namespace lawfirm.backend.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("LegacyCaseId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Matter")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -638,7 +642,7 @@ namespace lawfirm.backend.Migrations
                     b.HasOne("lawfirm.backend.Models.CaseRecord", "Case")
                         .WithMany()
                         .HasForeignKey("CaseId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("lawfirm.backend.Models.User", "Lawyer")
                         .WithMany()
@@ -649,7 +653,7 @@ namespace lawfirm.backend.Migrations
                     b.HasOne("lawfirm.backend.Models.CaseTask", "Task")
                         .WithMany()
                         .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Case");
 

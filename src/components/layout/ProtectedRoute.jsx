@@ -13,7 +13,12 @@ export default function ProtectedRoute({ role, children }) {
   return (
     <div className="app-shell">
       <Sidebar />
-      <div className="main-col">{children}</div>
+      <div className="main-col">
+        {children}
+        <footer className="app-footer">
+          <span>Made by FutureSort Technologies</span>
+        </footer>
+      </div>
     </div>
   );
 }

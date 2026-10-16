@@ -67,7 +67,7 @@ export default function ClientCaseHistoryPage() {
       <Topbar />
       <div className="page">
         <button
-          className="link"
+          className="link back-link"
           onClick={() => nav("/clients")}
           style={{ fontSize: 12, marginBottom: 10, display: "inline-block" }}
         >
@@ -118,7 +118,20 @@ export default function ClientCaseHistoryPage() {
                     }
                   >
                     <td className="mono" style={{ fontWeight: 700 }}>
-                      {c.caseId}
+                      <div>{c.caseId}</div>
+                      {c.legacyCaseId && (
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: "var(--text-muted)",
+                            marginTop: 2,
+                          }}
+                          title={`Previous Case ID: ${c.legacyCaseId}`}
+                        >
+                          Prev: {c.legacyCaseId}
+                        </div>
+                      )}
                     </td>
                     <td>
                       {type && (

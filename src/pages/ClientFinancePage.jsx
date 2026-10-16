@@ -145,7 +145,7 @@ export default function ClientFinancePage() {
         <div className="page-head">
           <div>
             <button
-              className="link"
+              className="link back-link"
               onClick={() => nav("/finance")}
               style={{ fontSize: 12, marginBottom: 6, display: "inline-block" }}
             >

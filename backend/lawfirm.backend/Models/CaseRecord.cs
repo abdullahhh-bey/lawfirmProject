@@ -9,6 +9,11 @@ public class CaseRecord
     /// </summary>
     public string CaseId { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Optional case number retained from the firm's previous case register.
+    /// </summary>
+    public string? LegacyCaseId { get; set; }
+
     public string CaseTypeCode { get; set; } = string.Empty;
 
     public Guid ClientId { get; set; }

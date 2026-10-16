@@ -38,6 +38,7 @@ export default function TaskCard({
       <div className="task-card">
         <div className="task-card-head">
           <input
+            className="task-name-input"
             placeholder="Task name (e.g. Hearing)"
             value={task.name}
             onChange={(e) => onChange({ ...task, name: e.target.value })}

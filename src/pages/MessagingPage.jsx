@@ -40,7 +40,7 @@ export default function MessagingPage() {
   return (
     <>
       <Topbar />
-      <div className="page">
+      <div className="page messaging-page">
         <div className="page-head">
           <div>
             <h1>Messaging</h1>
@@ -50,20 +50,17 @@ export default function MessagingPage() {
           </div>
         </div>
 
-        <div className="grid grid-2" style={{ marginBottom: 20 }}>
-          <div className="card">
-            <h3 style={{ marginBottom: 8 }}>Individual Message</h3>
-            <div
-              style={{
-                color: "var(--text-muted)",
-                fontSize: 12.5,
-                marginBottom: 14,
-              }}
-            >
+        <div className="grid grid-2 messaging-compose-options">
+          <section className="card messaging-option-card">
+            <div className="messaging-option-icon" aria-hidden="true">↗</div>
+            <h2>Individual Message</h2>
+            <p>
               Select one advocate and send a custom message.
-            </div>
+            </p>
             <select
+              className="messaging-recipient-select"
               defaultValue=""
+              aria-label="Choose an advocate to message"
               onChange={(e) => {
                 const l = lawyers.find((x) => x.id === e.target.value);
                 if (l) setIndividualTarget(l);
@@ -81,64 +78,47 @@ export default function MessagingPage() {
                   </option>
                 ))}
             </select>
-          </div>
-          <div className="card">
-            <h3 style={{ marginBottom: 8 }}>Group / Broadcast Message</h3>
-            <div
-              style={{
-                color: "var(--text-muted)",
-                fontSize: 12.5,
-                marginBottom: 14,
-              }}
-            >
+          </section>
+          <section className="card messaging-option-card">
+            <div className="messaging-option-icon" aria-hidden="true">◎</div>
+            <h2>Group / Broadcast Message</h2>
+            <p>
               Select multiple advocates and send the same message to all of
               them.
-            </div>
+            </p>
             <button
               className="btn btn-primary"
               onClick={() => setBroadcastOpen(true)}
             >
               Compose Broadcast
             </button>
-          </div>
+          </section>
         </div>
 
-        <div className="card">
-          <h3 style={{ marginBottom: 14 }}>Message Log</h3>
+        <section className="card messaging-log-card">
+          <div className="messaging-log-heading">
+            <div>
+              <h2>Message Log</h2>
+              <p>Recent messages sent to advocates.</p>
+            </div>
+            <span className="messaging-count">{log.length} {log.length === 1 ? "message" : "messages"}</span>
+          </div>
           {log.length === 0 && (
-            <div style={{ color: "var(--text-muted)", fontSize: 13 }}>
+            <div className="messaging-empty">
               No messages sent yet.
             </div>
           )}
           <div className="msg-thread">
             {log.map((m) => (
-              <div
+              <article
                 key={m.id}
-                className="msg-log-row"
-                style={{
-                  alignItems: "flex-start",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
+                className="msg-log-row messaging-message-card"
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                  }}
-                >
-                  <span
-                    className="chip"
-                    style={{ textTransform: "capitalize" }}
-                  >
-                    {m.type}
-                  </span>
-                  <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                    {new Date(m.createdAt).toLocaleString()}
-                  </span>
+                <div className="messaging-message-meta">
+                  <span className="messaging-type">{m.type}</span>
+                  <time dateTime={m.createdAt}>{new Date(m.createdAt).toLocaleString()}</time>
                 </div>
-                {m.text && <div style={{ fontSize: 13 }}>{m.text}</div>}
+                {m.text && <p className="messaging-message-text">{m.text}</p>}
                 <AttachmentList
                   attachments={m.attachments}
                   compact
@@ -148,10 +128,10 @@ export default function MessagingPage() {
                   recipientStatus={m.recipientStatus}
                   lawyerNameOf={lawyerName}
                 />
-              </div>
+              </article>
             ))}
           </div>
-        </div>
+        </section>
       </div>
 
       {individualTarget && (

@@ -68,8 +68,10 @@ export default function CasesPage() {
       r = r.filter(
         (c) =>
           (c?.caseId || "").toLowerCase().includes(qq) ||
+          (c?.legacyCaseId || "").toLowerCase().includes(qq) ||
           clientName(c?.clientId).toLowerCase().includes(qq) ||
-          (c?.matter || "").toLowerCase().includes(qq),
+          (c?.matter || "").toLowerCase().includes(qq) ||
+          (c?.ourRef || "").toLowerCase().includes(qq),
       );
     }
     return [...r].sort((a, b) =>
@@ -191,7 +193,20 @@ export default function CasesPage() {
                     onClick={() => nav(`/cases/${c.id}`)}
                   >
                     <td className="mono" style={{ fontWeight: 700 }}>
-                      {c.caseId}
+                      <div>{c.caseId}</div>
+                      {c.legacyCaseId && (
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: "var(--text-muted)",
+                            marginTop: 2,
+                          }}
+                          title={`Previous Case ID: ${c.legacyCaseId}`}
+                        >
+                          Prev: {c.legacyCaseId}
+                        </div>
+                      )}
                     </td>
                     <td>{clientName(c.clientId)}</td>
                     <td>

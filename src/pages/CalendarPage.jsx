@@ -24,7 +24,7 @@ export default function CalendarPage() {
   return (
     <>
       <Topbar />
-      <div className="page">
+      <div className="page calendar-page">
         <div className="page-head">
           <div>
             <h1>Calendar</h1>

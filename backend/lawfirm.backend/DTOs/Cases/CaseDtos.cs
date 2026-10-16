@@ -4,6 +4,7 @@ public class CaseDto
 {
     public Guid Id { get; set; }
     public string CaseId { get; set; } = string.Empty;
+    public string? LegacyCaseId { get; set; }
     public string CaseTypeCode { get; set; } = string.Empty;
     public Guid ClientId { get; set; }
     public string ClientName { get; set; } = string.Empty;
@@ -24,6 +25,7 @@ public class CaseDto
 
 public class CreateCaseDto
 {
+    public string? LegacyCaseId { get; set; }
     public string CaseTypeCode { get; set; } = string.Empty; // "FAM", "PI", etc.
     public Guid ClientId { get; set; }
     public string OurRef { get; set; } = string.Empty;
@@ -69,4 +71,10 @@ public class SetCaseStatusDto
 public class SetCaseDocumentsDto
 {
     public string DocumentsJson { get; set; } = "[]";
+}
+
+public class UpdateLegacyCaseIdDto
+{
+    [System.ComponentModel.DataAnnotations.MaxLength(100)]
+    public string? LegacyCaseId { get; set; }
 }

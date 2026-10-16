@@ -107,10 +107,13 @@ public class CaseService : ICaseService
 
         var caseIdStr = $"{code}-{nextNum:D3}";
 
+        var normalizedLegacyCaseId = dto.LegacyCaseId?.Trim();
+
         var caseRecord = new CaseRecord
         {
             Id = Guid.NewGuid(),
             CaseId = caseIdStr,
+            LegacyCaseId = string.IsNullOrEmpty(normalizedLegacyCaseId) ? null : normalizedLegacyCaseId,
             CaseTypeCode = code,
             ClientId = dto.ClientId,
             OurRef = dto.OurRef ?? "",
@@ -192,6 +195,25 @@ public class CaseService : ICaseService
         caseRecord.FeeAgreed = dto.FeeAgreed;
         caseRecord.PiFieldsJson = dto.PiFieldsJson;
         caseRecord.Notes = dto.Notes;
+        caseRecord.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return MapToDto(caseRecord);
+    }
+
+    public async Task<CaseDto> UpdateLegacyCaseIdAsync(Guid caseId, string? legacyCaseId)
+    {
+        var caseRecord = await _context.Cases
+            .Include(c => c.Client)
+            .Include(c => c.AssignedLawyers)
+            .FirstOrDefaultAsync(c => c.Id == caseId);
+
+        if (caseRecord == null) throw new KeyNotFoundException("Case not found.");
+
+        var normalizedLegacyCaseId = legacyCaseId?.Trim();
+        caseRecord.LegacyCaseId = string.IsNullOrEmpty(normalizedLegacyCaseId)
+            ? null
+            : normalizedLegacyCaseId;
         caseRecord.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -325,6 +347,7 @@ public class CaseService : ICaseService
         {
             Id = c.Id,
             CaseId = c.CaseId,
+            LegacyCaseId = c.LegacyCaseId,
             CaseTypeCode = c.CaseTypeCode,
             ClientId = c.ClientId,
             ClientName = c.Client?.Name ?? "",

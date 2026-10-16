@@ -64,7 +64,7 @@ export default function LawyerPortal() {
           {[
             ["in-progress", "In Progress"],
             ["completed", "Completed"],
-            ["uncompleted", "Uncompleted"],
+            ["uncompleted", "Incompleted"],
             ["archived", "Archived"],
           ].map(([key, label]) => (
             <button
@@ -111,7 +111,20 @@ export default function LawyerPortal() {
                     onClick={() => nav(`/portal/cases/${c.id}`)}
                   >
                     <td className="mono" style={{ fontWeight: 700 }}>
-                      {c.caseId}
+                      <div>{c.caseId}</div>
+                      {c.legacyCaseId && (
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: "var(--text-muted)",
+                            marginTop: 2,
+                          }}
+                          title={`Previous Case ID: ${c.legacyCaseId}`}
+                        >
+                          Prev: {c.legacyCaseId}
+                        </div>
+                      )}
                     </td>
                     <td>{clientName(c.clientId)}</td>
                     <td>

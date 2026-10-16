@@ -97,6 +97,21 @@ public class CasesController : ControllerBase
         }
     }
 
+    [HttpPut("{id:guid}/legacy-case-id")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult<CaseDto>> UpdateLegacyCaseId(Guid id, [FromBody] UpdateLegacyCaseIdDto dto)
+    {
+        try
+        {
+            var updated = await _caseService.UpdateLegacyCaseIdAsync(id, dto.LegacyCaseId);
+            return Ok(updated);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { message = "Case not found." });
+        }
+    }
+
 
     [HttpPut("{id:guid}/assign-lawyers")]
     [Authorize(Roles = "admin")]

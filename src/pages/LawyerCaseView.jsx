@@ -163,7 +163,7 @@ export default function LawyerCaseView() {
       <Topbar />
       <div className="page">
         <button
-          className="link"
+          className="link back-link"
           onClick={() => nav("/portal")}
           style={{ fontSize: 12, marginBottom: 10, display: "inline-block" }}
         >

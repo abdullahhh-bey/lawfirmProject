@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { caseTypeByCode } from "../../data/nomenclature.js";
 import CaseStatus from "./CaseStatus.jsx";
@@ -13,8 +13,33 @@ export default function CaseDetails({
   onDocumentsChange,
   feeReceived,
   clientId,
+  isAdmin = false,
+  onSaveLegacyCaseId,
 }) {
+  const [editingLegacyCaseId, setEditingLegacyCaseId] = useState(false);
+  const [legacyCaseId, setLegacyCaseId] = useState(caseRecord.legacyCaseId || "");
+  const [savingLegacyCaseId, setSavingLegacyCaseId] = useState(false);
+  const [legacyCaseIdError, setLegacyCaseIdError] = useState("");
   const type = caseTypeByCode(caseRecord.caseTypeCode);
+
+  useEffect(() => {
+    setLegacyCaseId(caseRecord.legacyCaseId || "");
+  }, [caseRecord.legacyCaseId]);
+
+  async function saveLegacyCaseId() {
+    if (savingLegacyCaseId) return;
+    setSavingLegacyCaseId(true);
+    setLegacyCaseIdError("");
+    try {
+      await onSaveLegacyCaseId(legacyCaseId.trim());
+      setEditingLegacyCaseId(false);
+    } catch (error) {
+      setLegacyCaseIdError(error.message || "Could not save the previous case ID.");
+    } finally {
+      setSavingLegacyCaseId(false);
+    }
+  }
+
   return (
     <div className="card">
       <div className="card-head">
@@ -51,6 +76,60 @@ export default function CaseDetails({
 
       <div style={{ display: "grid", gap: 10, fontSize: 13, marginBottom: 16 }}>
         <Row label="Case Type" value={type?.label} />
+        <div className="legacy-case-id-row">
+          <span className="legacy-case-id-label">Previous Case ID</span>
+          {editingLegacyCaseId ? (
+            <div className="legacy-case-id-editor">
+              <input
+                aria-label="Previous case ID"
+                maxLength={100}
+                value={legacyCaseId}
+                onChange={(event) => setLegacyCaseId(event.target.value)}
+                disabled={savingLegacyCaseId}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={saveLegacyCaseId}
+                disabled={savingLegacyCaseId}
+              >
+                {savingLegacyCaseId ? "Saving…" : "Save"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => {
+                  setLegacyCaseId(caseRecord.legacyCaseId || "");
+                  setLegacyCaseIdError("");
+                  setEditingLegacyCaseId(false);
+                }}
+                disabled={savingLegacyCaseId}
+              >
+                Cancel
+              </button>
+              {legacyCaseIdError && (
+                <span className="err-text" role="alert">{legacyCaseIdError}</span>
+              )}
+            </div>
+          ) : (
+            <div className="legacy-case-id-value">
+              <span>{caseRecord.legacyCaseId || "Not set"}</span>
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="back-link legacy-case-id-edit"
+                  onClick={() => {
+                    setLegacyCaseId(caseRecord.legacyCaseId || "");
+                    setEditingLegacyCaseId(true);
+                  }}
+                >
+                  {caseRecord.legacyCaseId ? "Edit" : "Add"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         <Row label="Matter" value={caseRecord.matter} />
         <Row label="Our Ref" value={caseRecord.ourRef} />
         <Row label="Opening Date" value={caseRecord.openingDate} />

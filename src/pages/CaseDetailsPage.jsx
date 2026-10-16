@@ -123,6 +123,16 @@ export default function CaseDetailsPage() {
     }
   }
 
+  async function updateLegacyCaseId(legacyCaseId) {
+    try {
+      const updated = await casesApi.updateLegacyCaseId(caseRecord.id, legacyCaseId);
+      setCaseRecord(updated);
+      showToast("Previous case ID updated.");
+    } catch (error) {
+      throw new Error(error.message || "Could not update the previous case ID.");
+    }
+  }
+
   async function updateTaskStatus(task, status) {
     try {
       const updated = await tasksApi.setStatus(task.id, status);
@@ -256,7 +266,7 @@ export default function CaseDetailsPage() {
         <div className="page-head">
           <div>
             <button
-              className="link"
+              className="link back-link"
               onClick={() => nav(backPath)}
               style={{ fontSize: 12, marginBottom: 6, display: "inline-block" }}
             >
@@ -264,6 +274,19 @@ export default function CaseDetailsPage() {
             </button>
             <h1>
               {caseRecord.caseId}{" "}
+              {caseRecord.legacyCaseId && (
+                <span
+                  style={{
+                    fontSize: 14,
+                    color: "var(--accent)",
+                    fontWeight: 600,
+                    marginRight: 6,
+                  }}
+                  title="Previous Case ID"
+                >
+                  (Prev: {caseRecord.legacyCaseId})
+                </span>
+              )}
               <span
                 style={{
                   color: "var(--text-muted)",
@@ -344,6 +367,8 @@ export default function CaseDetailsPage() {
               onDocumentsChange={updateDocuments}
               feeReceived={feeReceived}
               clientId={client?.id}
+              isAdmin={isAdmin}
+              onSaveLegacyCaseId={updateLegacyCaseId}
             />
           </div>
         )}

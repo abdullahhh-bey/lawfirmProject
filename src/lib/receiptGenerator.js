@@ -1,7 +1,7 @@
 /**
  * Generates an official Law Firm Payment Receipt image (PNG Blob) using HTML5 Canvas.
  */
-import logoUrl from '../components/ui/Gemini_Generated_Image_gehpycgehpycgehp.png?url';
+import logoUrl from '../components/ui/lawfirmLOGO.jpg?url';
 
 export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeBalance }) {
   return new Promise((resolve) => {
@@ -17,17 +17,17 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
 
     // Decorative Header Banner
     const gradient = ctx.createLinearGradient(0, 0, 800, 0);
-    gradient.addColorStop(0, '#1E293B'); // Slate 800
-    gradient.addColorStop(1, '#0F172A'); // Slate 900
+    gradient.addColorStop(0, '#000080');
+    gradient.addColorStop(1, '#17178D');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 800, 140);
+    ctx.fillRect(190, 0, 610, 140);
 
-    ctx.fillStyle = '#F8FAFC';
+    ctx.fillStyle = '#FFFAFA';
     ctx.font = '14px "Segoe UI", Roboto, sans-serif';
     ctx.fillText('Solicitors & Legal Services', 200, 75);
 
     // Badge
-    ctx.fillStyle = '#3B82F6';
+    ctx.fillStyle = '#28288F';
     ctx.fillRect(600, 35, 160, 30);
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 12px sans-serif';
@@ -36,9 +36,9 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
     ctx.textAlign = 'left';
 
     // Subheader Bar
-    ctx.fillStyle = '#F1F5F9';
+    ctx.fillStyle = '#E9E9F8';
     ctx.fillRect(0, 140, 800, 50);
-    ctx.fillStyle = '#334155';
+    ctx.fillStyle = '#000080';
     ctx.font = 'bold 16px sans-serif';
     ctx.fillText('PAYMENT ACKNOWLEDGEMENT RECEIPT', 40, 172);
 
@@ -130,7 +130,7 @@ export function generateReceiptPng({ client, caseId, entry, totalAgreed, officeB
       }, 'image/png');
     };
     logo.onerror = () => {
-      ctx.fillStyle = '#D97706';
+      ctx.fillStyle = '#000080';
       ctx.font = 'bold 22px "Segoe UI", Roboto, sans-serif';
       ctx.fillText('PLUG SOLICITORS', 40, 55);
       canvas.toBlob((blob) => {

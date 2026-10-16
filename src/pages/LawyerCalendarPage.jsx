@@ -29,7 +29,7 @@ export default function LawyerCalendarPage() {
   return (
     <>
       <Topbar />
-      <div className="page">
+      <div className="page calendar-page">
         <div className="page-head">
           <div>
             <h1>My Calendar</h1>

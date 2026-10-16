@@ -88,6 +88,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(c => new { c.ClientId, c.Status });
 
             entity.Property(c => c.CaseId).HasMaxLength(20).IsRequired();
+            entity.Property(c => c.LegacyCaseId).HasMaxLength(100);
             entity.Property(c => c.CaseTypeCode).HasMaxLength(10).IsRequired();
             entity.Property(c => c.OurRef).HasMaxLength(50).HasDefaultValue("");
             entity.Property(c => c.Matter).HasMaxLength(255).HasDefaultValue("");

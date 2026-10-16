@@ -57,6 +57,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
       sub="Choose a new password for your account."
       onClose={closeModal}
       maxWidth="440px"
+      className="password-modal"
     >
       <form onSubmit={handleSubmit}>
         {error && (
