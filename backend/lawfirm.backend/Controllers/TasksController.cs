@@ -130,6 +130,8 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost("{id:guid}/attachments/upload")]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> UploadAttachment(Guid id, IFormFile file)
     {
         if (file == null || file.Length == 0)

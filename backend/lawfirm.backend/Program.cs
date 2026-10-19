@@ -60,6 +60,19 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 // LAYER 2: REGISTER APPLICATION SECURITY & AES-256 ENCRYPTION SERVICE
 builder.Services.AddSingleton<ISecurityEncryptionService, SecurityEncryptionService>();
 
+// Configure Kestrel and Form multipart request limits to 50MB (52,428,800 bytes)
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 52428800;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 52428800;
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
 // LAYER 1: DATABASE CONTEXT & TLS/SSL IN-TRANSIT SECURITY
 // Enforces SSL Mode=Require on the PostgreSQL connection
 var connectionString =

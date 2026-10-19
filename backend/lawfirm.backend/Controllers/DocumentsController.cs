@@ -33,6 +33,8 @@ public class DocumentsController : ControllerBase
     private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? "lawyer";
 
     [HttpPost("upload")]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> UploadDocument(Guid caseId, IFormFile file, [FromQuery] string? folderId = null)
     {
         if (file == null || file.Length == 0)

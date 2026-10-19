@@ -60,6 +60,7 @@ export default function DocumentManager({
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [downloadingFileId, setDownloadingFileId] = useState(null);
   const fileInputRef = useRef(null);
 
   const safeDocs = Array.isArray(documents) ? documents : [];
@@ -179,45 +180,53 @@ export default function DocumentManager({
 
   async function downloadFile(file, e) {
     e?.stopPropagation();
+    if (downloadingFileId) return;
+    setDownloadingFileId(file.id);
 
-    if (caseId && file.id && !file.dataUrl && !file.url) {
-      const res = await fetch(
-        `${API_BASE_URL}/cases/${caseId}/documents/${file.id}/download`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-      );
+    try {
+      if (caseId && file.id && !file.dataUrl && !file.url) {
+        const res = await fetch(
+          `${API_BASE_URL}/cases/${caseId}/documents/${file.id}/download`,
+          {
+            method: "GET",
+            credentials: "include",
+          },
+        );
 
-      if (!res.ok) {
-        setErr("This file could not be downloaded.");
+        if (!res.ok) {
+          setErr("This file could not be downloaded.");
+          return;
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name || "document";
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
         return;
       }
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const targetUrl = file.dataUrl || file.url;
+      if (!targetUrl) return;
       const a = document.createElement("a");
-      a.href = url;
+      a.href = targetUrl;
       a.download = file.name || "document";
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      return;
+    } catch (error) {
+      setErr(error.message || "This file could not be downloaded.");
+    } finally {
+      setDownloadingFileId(null);
     }
-
-    const targetUrl = file.dataUrl || file.url;
-    if (!targetUrl) return;
-    const a = document.createElement("a");
-    a.href = targetUrl;
-    a.download = file.name || "document";
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   }
 
   return (
@@ -312,6 +321,7 @@ export default function DocumentManager({
               ref={fileInputRef}
               type="file"
               multiple
+              accept="*/*"
               onChange={handleFiles}
               style={{ display: "none" }}
             />
@@ -471,9 +481,19 @@ export default function DocumentManager({
                     fontSize: 11,
                     color: "var(--accent)",
                     fontWeight: 600,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
                   }}
                 >
-                  ⬇️ Download
+                  {downloadingFileId === f.id ? (
+                    <>
+                      <span className="confirm-spin" style={{ width: 10, height: 10, borderWidth: 1.5 }} />
+                      <span>Downloading…</span>
+                    </>
+                  ) : (
+                    "⬇️ Download"
+                  )}
                 </span>
               </div>
               {!readOnly && (

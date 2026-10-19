@@ -188,6 +188,48 @@ public class CaseService : ICaseService
             throw new UnauthorizedAccessException("You are not authorized to update this case.");
         }
 
+        if (role == "admin")
+        {
+            if (dto.ClientId.HasValue && dto.ClientId.Value != Guid.Empty && dto.ClientId.Value != caseRecord.ClientId)
+            {
+                var clientExists = await _context.Clients.AnyAsync(c => c.Id == dto.ClientId.Value);
+                if (clientExists)
+                {
+                    caseRecord.ClientId = dto.ClientId.Value;
+                    await _context.Entry(caseRecord).Reference(c => c.Client).LoadAsync();
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.CaseTypeCode))
+            {
+                caseRecord.CaseTypeCode = dto.CaseTypeCode.Trim().ToUpperInvariant();
+            }
+
+            if (dto.LegacyCaseId != null)
+            {
+                var norm = dto.LegacyCaseId.Trim();
+                caseRecord.LegacyCaseId = string.IsNullOrEmpty(norm) ? null : norm;
+            }
+
+            if (dto.AssignedLawyerIds != null)
+            {
+                caseRecord.AssignedLawyers.Clear();
+                if (dto.AssignedLawyerIds.Any())
+                {
+                    var lawyers = await _context.Users
+                        .Where(u => dto.AssignedLawyerIds.Contains(u.Id) && u.IsActive)
+                        .ToListAsync();
+                    foreach (var l in lawyers) caseRecord.AssignedLawyers.Add(l);
+
+                    if (caseRecord.Status == "Unassigned") caseRecord.Status = "Assigned";
+                }
+                else
+                {
+                    if (caseRecord.Status != "Completed") caseRecord.Status = "Unassigned";
+                }
+            }
+        }
+
         caseRecord.OurRef = dto.OurRef;
         caseRecord.Matter = dto.Matter;
         if (dto.OpeningDate.HasValue) caseRecord.OpeningDate = EnsureUtc(dto.OpeningDate.Value);

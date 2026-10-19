@@ -49,6 +49,9 @@ public class CreateCaseInitialTaskDto
 
 public class UpdateCaseDto
 {
+    public Guid? ClientId { get; set; }
+    public string? CaseTypeCode { get; set; }
+    public string? LegacyCaseId { get; set; }
     public string OurRef { get; set; } = string.Empty;
     public string Matter { get; set; } = string.Empty;
     public DateTime? OpeningDate { get; set; }
@@ -56,6 +59,7 @@ public class UpdateCaseDto
     public decimal FeeAgreed { get; set; }
     public string PiFieldsJson { get; set; } = "{}";
     public string Notes { get; set; } = string.Empty;
+    public List<Guid>? AssignedLawyerIds { get; set; }
 }
 
 public class AssignLawyersDto

@@ -15,6 +15,7 @@ import { useApp } from "../context/AppContext.jsx";
 
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import SubmitProgress from "../components/ui/SubmitProgress.jsx";
+import MessageComposer from "../components/messaging/MessageComposer.jsx";
 
 export default function LawyerCaseView() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function LawyerCaseView() {
   const [caseRecord, setCaseRecord] = useState(null);
   const [client, setClient] = useState(null);
   const [taskItems, setTaskItems] = useState([]);
+  const [messageTarget, setMessageTarget] = useState(null);
   const [lawyers, setLawyers] = useState([]);
   const [draftTask, setDraftTask] = useState(null);
   const [savingTask, setSavingTask] = useState(false);
@@ -185,8 +187,33 @@ export default function LawyerCaseView() {
             </h1>
             <div className="sub">{type?.label}</div>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             <CaseStatus status={caseRecord.status} />
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setMessageTarget({ id: null, name: "Admin", role: "admin" })}
+              title="Send a portal message to Admin regarding this case"
+            >
+              💬 Message Admin
+            </button>
+            {((caseRecord.assignedLawyerIds || []).filter(
+              (lawId) => (lawId || "").toLowerCase() !== (session?.id || "").toLowerCase()
+            )).map((lawId) => {
+              const originalIdx = (caseRecord.assignedLawyerIds || []).indexOf(lawId);
+              const name = (caseRecord.assignedLawyerNames || [])[originalIdx] || lawyerName(lawId) || "Co-Advocate";
+              return (
+                <button
+                  key={lawId}
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setMessageTarget({ id: lawId, name, role: "lawyer" })}
+                  title={`Send a portal message and share files with ${name}`}
+                >
+                  💬 Message {name}
+                </button>
+              );
+            })}
             {caseWritable && caseRecord.status !== "In Process" && (
               <button className="btn btn-primary" onClick={startWorking}>
                 Start Working
@@ -209,6 +236,36 @@ export default function LawyerCaseView() {
               <Row label="Client Address" value={client?.address} />
               <Row label="Opening Date" value={caseRecord.openingDate} />
               <Row label="Notes" value={caseRecord.notes} />
+              {((caseRecord.assignedLawyerIds || []).filter(
+                (lawId) => (lawId || "").toLowerCase() !== (session?.id || "").toLowerCase()
+              )).length > 0 && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
+                    Co-Advocate Team
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {((caseRecord.assignedLawyerIds || []).filter(
+                      (lawId) => (lawId || "").toLowerCase() !== (session?.id || "").toLowerCase()
+                    )).map((lawId) => {
+                      const originalIdx = (caseRecord.assignedLawyerIds || []).indexOf(lawId);
+                      const name = (caseRecord.assignedLawyerNames || [])[originalIdx] || lawyerName(lawId) || "Co-Advocate";
+                      return (
+                        <button
+                          key={lawId}
+                          type="button"
+                          className="chip"
+                          onClick={() => setMessageTarget({ id: lawId, name, role: "lawyer" })}
+                          style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                          title={`Click to send message and share files with ${name}`}
+                        >
+                          <span>⚖️ {name}</span>
+                          <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>💬 Message</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             <div
               style={{
@@ -297,6 +354,15 @@ export default function LawyerCaseView() {
           </div>
         </div>
       </div>
+
+      {messageTarget && (
+        <MessageComposer
+          recipient={messageTarget.id ? messageTarget : undefined}
+          portalOnly={true}
+          onClose={() => setMessageTarget(null)}
+          onSent={() => showToast(`Message sent to ${messageTarget.name}.`)}
+        />
+      )}
     </>
   );
 }

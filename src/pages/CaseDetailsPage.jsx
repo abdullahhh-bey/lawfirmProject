@@ -10,6 +10,7 @@ import NotificationStatus from "../components/messaging/NotificationStatus.jsx";
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import SubmitProgress from "../components/ui/SubmitProgress.jsx";
 import ConfirmDialog from "../components/ui/ConfirmDialog.jsx";
+import EditCaseModal from "../components/cases/EditCaseModal.jsx";
 import {
   cases as casesApi,
   clients as clientsApi,
@@ -48,6 +49,7 @@ export default function CaseDetailsPage() {
   const [archiving, setArchiving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [editingCase, setEditingCase] = useState(false);
 
   const isAdmin = session?.role === "admin";
   const historyReturnPath = location.state?.returnTo;
@@ -317,6 +319,15 @@ export default function CaseDetailsPage() {
                   Message {lawyerName(lawId)}
                 </button>
               ))}
+            {isAdmin && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => setEditingCase(true)}
+                title="Edit case details, client, advocate, or matter"
+              >
+                ✏️ Edit Case
+              </button>
+            )}
             {caseRecord.status !== "Cancelled" && (
               <button
                 className="btn btn-secondary"
@@ -369,6 +380,7 @@ export default function CaseDetailsPage() {
               clientId={client?.id}
               isAdmin={isAdmin}
               onSaveLegacyCaseId={updateLegacyCaseId}
+              onEditToggle={isAdmin ? () => setEditingCase(true) : undefined}
             />
           </div>
         )}
@@ -507,6 +519,19 @@ export default function CaseDetailsPage() {
           ]}
           onConfirm={confirmCancelCase}
           onCancel={() => setConfirmAction(null)}
+        />
+      )}
+
+      {editingCase && (
+        <EditCaseModal
+          caseRecord={caseRecord}
+          client={client}
+          onClose={() => setEditingCase(false)}
+          onSave={(updated) => {
+            setCaseRecord(updated);
+            showToast(`Case ${updated.caseId} updated successfully.`);
+            reload();
+          }}
         />
       )}
     </>

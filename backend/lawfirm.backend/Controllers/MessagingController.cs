@@ -55,6 +55,8 @@ public class MessagingController : ControllerBase
     }
 
     [HttpPost("attachments/upload")]
+    [RequestSizeLimit(52428800)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 52428800)]
     public async Task<IActionResult> UploadAttachment([FromForm] IFormFile file)
     {
         if (file == null || file.Length == 0)
@@ -136,6 +138,13 @@ public class MessagingController : ControllerBase
     {
         var notifs = await _messagingService.GetNotificationsAsync(CurrentUserId, CurrentUserRole);
         return Ok(notifs);
+    }
+
+    [HttpGet("recipients")]
+    public async Task<ActionResult<List<RecipientDto>>> GetRecipients()
+    {
+        var recipients = await _messagingService.GetRecipientsAsync(CurrentUserId, CurrentUserRole);
+        return Ok(recipients);
     }
 
     private static List<Dictionary<string, object>> ParseAttachmentsJson(string json)

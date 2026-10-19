@@ -8,5 +8,6 @@ public interface IMessagingService
     Task<MessageDto> SendMessageAsync(SendMessageDto dto, Guid senderId);
     Task<MessageDto> SetMessageAttachmentsAsync(Guid messageId, string attachmentsJson, Guid currentUserId, string role);
     Task MarkMessageSeenAsync(Guid messageId, Guid lawyerId);
+    Task<List<RecipientDto>> GetRecipientsAsync(Guid currentUserId, string role);
     Task<List<NotificationDto>> GetNotificationsAsync(Guid currentUserId, string role);
 }

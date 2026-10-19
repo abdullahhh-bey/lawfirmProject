@@ -143,4 +143,23 @@ public class MessagingService : IMessagingService
             CreatedAt = n.CreatedAt
         }).ToList();
     }
+
+    public async Task<List<RecipientDto>> GetRecipientsAsync(Guid currentUserId, string role)
+    {
+        var users = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.IsActive && u.Id != currentUserId)
+            .OrderBy(u => u.Role == "admin" ? 0 : 1)
+            .ThenBy(u => u.FullName)
+            .ToListAsync();
+
+        return users.Select(u => new RecipientDto
+        {
+            Id = u.Id,
+            Name = u.Role == "admin" ? $"{u.FullName} (Admin)" : u.FullName,
+            Email = u.Email,
+            Role = u.Role,
+            Phone = u.Phone
+        }).ToList();
+    }
 }

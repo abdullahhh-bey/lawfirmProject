@@ -1,6 +1,6 @@
 // Converts browser File objects into lightweight attachment metadata.
 // New uploads are sent as real files via FormData and stored as metadata only.
-const MAX_FILE_BYTES = 4 * 1024 * 1024;
+const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50MB capacity
 
 export async function filesToAttachments(fileList) {
   const files = Array.from(fileList || []);
@@ -8,7 +8,7 @@ export async function filesToAttachments(fileList) {
 
   for (const file of files) {
     if (file.size > MAX_FILE_BYTES) {
-      throw new Error(`"${file.name}" is larger than 4MB — pick a smaller file.`);
+      throw new Error(`"${file.name}" is larger than 50MB — please select a file under 50MB.`);
     }
 
     attachments.push({

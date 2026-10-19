@@ -369,10 +369,14 @@ export const cases = {
   },
 
   async update(id, data) {
-    clearCache('cases');
+    clearCache();
     const res = await request(`/cases/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
+        clientId: data.clientId || undefined,
+        caseTypeCode: data.caseTypeCode || undefined,
+        legacyCaseId: data.legacyCaseId !== undefined ? data.legacyCaseId : undefined,
+        assignedLawyerIds: data.assignedLawyerIds || undefined,
         ourRef: data.ourRef,
         matter: data.matter,
         openingDate: data.openingDate || null,
@@ -802,6 +806,10 @@ export const messaging = {
       const list = (await request('/messaging')) || [];
       return list.map(transformMessage);
     });
+  },
+
+  async getRecipients() {
+    return (await request('/messaging/recipients')) || [];
   },
 };
 
