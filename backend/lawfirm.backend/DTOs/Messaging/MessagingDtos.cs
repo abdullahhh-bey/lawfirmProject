@@ -1,15 +1,25 @@
 namespace lawfirm.backend.DTOs.Messaging;
 
+public class MessageRecipientDto
+{
+    public Guid RecipientId { get; set; }
+    public string RecipientName { get; set; } = string.Empty;
+    public string RecipientRole { get; set; } = string.Empty;
+    public string Status { get; set; } = "Delivered";
+}
+
 public class MessageDto
 {
     public Guid Id { get; set; }
     public Guid SenderId { get; set; }
     public string SenderName { get; set; } = string.Empty;
+    public string SenderRole { get; set; } = string.Empty;
     public string Type { get; set; } = "individual"; // "individual" or "broadcast"
     public string Text { get; set; } = string.Empty;
     public string AttachmentsJson { get; set; } = "[]";
     public DateTime CreatedAt { get; set; }
     public Dictionary<Guid, string> RecipientStatus { get; set; } = new();
+    public List<MessageRecipientDto> Recipients { get; set; } = new();
 }
 
 public class SendMessageDto

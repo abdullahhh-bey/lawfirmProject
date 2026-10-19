@@ -200,10 +200,7 @@ public class CaseService : ICaseService
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(dto.CaseTypeCode))
-            {
-                caseRecord.CaseTypeCode = dto.CaseTypeCode.Trim().ToUpperInvariant();
-            }
+            // CaseTypeCode, CaseId, and Start Date (OpeningDate) are locked and cannot be changed.
 
             if (dto.LegacyCaseId != null)
             {
@@ -232,7 +229,7 @@ public class CaseService : ICaseService
 
         caseRecord.OurRef = dto.OurRef;
         caseRecord.Matter = dto.Matter;
-        if (dto.OpeningDate.HasValue) caseRecord.OpeningDate = EnsureUtc(dto.OpeningDate.Value);
+        // OpeningDate (Start Date) remains locked
         if (dto.ClosingDate.HasValue) caseRecord.ClosingDate = EnsureUtc(dto.ClosingDate.Value);
         caseRecord.FeeAgreed = dto.FeeAgreed;
         caseRecord.PiFieldsJson = dto.PiFieldsJson;

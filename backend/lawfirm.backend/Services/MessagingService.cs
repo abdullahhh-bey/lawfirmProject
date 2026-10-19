@@ -20,7 +20,8 @@ public class MessagingService : IMessagingService
             .AsNoTracking()
             .AsSplitQuery()
             .Include(m => m.Sender)
-            .Include(m => m.Recipients);
+            .Include(m => m.Recipients)
+                .ThenInclude(r => r.Recipient);
 
         if (role != "admin")
         {
@@ -33,12 +34,24 @@ public class MessagingService : IMessagingService
         {
             Id = m.Id,
             SenderId = m.SenderId,
-            SenderName = m.Sender?.FullName ?? "Admin",
+            SenderName = !string.IsNullOrWhiteSpace(m.Sender?.FullName)
+                ? m.Sender.FullName
+                : (m.Sender?.Role == "admin" ? "Admin" : "Advocate"),
+            SenderRole = m.Sender?.Role ?? (m.SenderId == currentUserId && role == "admin" ? "admin" : "lawyer"),
             Type = m.Type,
             Text = m.Text,
             AttachmentsJson = m.AttachmentsJson,
             CreatedAt = m.CreatedAt,
-            RecipientStatus = m.Recipients.ToDictionary(r => r.RecipientId, r => r.Status)
+            RecipientStatus = m.Recipients.ToDictionary(r => r.RecipientId, r => r.Status),
+            Recipients = m.Recipients.Select(r => new MessageRecipientDto
+            {
+                RecipientId = r.RecipientId,
+                RecipientName = !string.IsNullOrWhiteSpace(r.Recipient?.FullName)
+                    ? r.Recipient.FullName
+                    : (r.Recipient?.Role == "admin" ? "Admin" : "Advocate"),
+                RecipientRole = r.Recipient?.Role ?? "lawyer",
+                Status = r.Status
+            }).ToList()
         }).ToList();
     }
 

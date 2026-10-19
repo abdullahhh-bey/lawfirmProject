@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Modal from "../ui/Modal.jsx";
 import MultiLawyerSelector from "../lawyers/MultiLawyerSelector.jsx";
-import { CASE_TYPES, caseTypeByCode, PI_EXTRA_FIELDS } from "../../data/nomenclature.js";
+import { caseTypeByCode, PI_EXTRA_FIELDS } from "../../data/nomenclature.js";
 import { cases as casesApi, clients as clientsApi } from "../../lib/api.js";
 import SubmitProgress from "../ui/SubmitProgress.jsx";
 
@@ -15,13 +15,9 @@ export default function EditCaseModal({
   const [loadingClients, setLoadingClients] = useState(true);
 
   const [clientId, setClientId] = useState(caseRecord.clientId || client?.id || "");
-  const [caseTypeCode, setCaseTypeCode] = useState(caseRecord.caseTypeCode || "");
   const [legacyCaseId, setLegacyCaseId] = useState(caseRecord.legacyCaseId || "");
   const [ourRef, setOurRef] = useState(caseRecord.ourRef || "");
   const [matter, setMatter] = useState(caseRecord.matter || "");
-  const [openingDate, setOpeningDate] = useState(
-    caseRecord.openingDate ? caseRecord.openingDate.slice(0, 10) : ""
-  );
   const [closingDate, setClosingDate] = useState(
     caseRecord.closingDate ? caseRecord.closingDate.slice(0, 10) : ""
   );
@@ -48,7 +44,7 @@ export default function EditCaseModal({
     return () => { active = false; };
   }, []);
 
-  const selectedType = caseTypeByCode(caseTypeCode);
+  const selectedType = caseTypeByCode(caseRecord.caseTypeCode);
 
   const handlePiChange = (key, val) => {
     setPiFields((prev) => ({ ...prev, [key]: val }));
@@ -66,11 +62,9 @@ export default function EditCaseModal({
     try {
       const payload = {
         clientId: clientId || undefined,
-        caseTypeCode: caseTypeCode || undefined,
         legacyCaseId: legacyCaseId.trim() || null,
         ourRef: ourRef.trim(),
         matter: matter.trim(),
-        openingDate: openingDate || null,
         closingDate: closingDate || null,
         feeAgreed: Number(feeAgreed) || 0,
         piFields,
@@ -88,65 +82,92 @@ export default function EditCaseModal({
     }
   }
 
+  const formattedStartDate = caseRecord.openingDate
+    ? new Date(caseRecord.openingDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
   return (
     <Modal
       title={`Edit Case: ${caseRecord.caseId}`}
-      sub="Admin can update client, case type, dates, previous case ID, advocate assignments, and matter details."
+      sub="Admin can update client, previous case ID, matter, closing date, fee, advocates, and notes."
       maxWidth="680px"
       onClose={onClose}
     >
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
         {error && <div className="err-banner">{error}</div>}
 
-        <div className="field-row">
-          <div className="field">
-            <label>
-              Client <span className="req">*</span>
-            </label>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              disabled={loadingClients || saving}
-              required
-            >
-              {loadingClients ? (
-                <option value="">Loading clients…</option>
-              ) : (
-                allClients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} {c.phone ? `(${c.phone})` : ""}
-                  </option>
-                ))
-              )}
-            </select>
+        {/* Locked permanent case attributes banner */}
+        <div
+          style={{
+            background: "var(--surface-2)",
+            border: "1px solid var(--line)",
+            borderRadius: 10,
+            padding: "12px 14px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>
+              Case ID (Permanent)
+            </div>
+            <div style={{ fontWeight: 800, fontSize: 14, color: "var(--accent)", marginTop: 2, fontFamily: "var(--font-mono)" }}>
+              {caseRecord.caseId}
+            </div>
           </div>
 
-          <div className="field">
-            <label>
-              Case Type <span className="req">*</span>
-            </label>
-            <select
-              value={caseTypeCode}
-              onChange={(e) => setCaseTypeCode(e.target.value)}
-              disabled={saving}
-              required
-            >
-              {CASE_TYPES.map((t) => (
-                <option key={t.code} value={t.code}>
-                  {t.label} ({t.code})
-                </option>
-              ))}
-            </select>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>
+              Case Type (Permanent)
+            </div>
+            <div style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+              {selectedType && (
+                <span className={`folder-chip ${selectedType.color}`}>
+                  {selectedType.color.toUpperCase()}
+                </span>
+              )}
+              <span style={{ fontWeight: 600, fontSize: 13 }}>
+                {selectedType?.label || caseRecord.caseTypeCode}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>
+              Start Date (Permanent)
+            </div>
+            <div style={{ fontWeight: 600, fontSize: 13.5, marginTop: 2 }}>
+              📅 {formattedStartDate}
+            </div>
           </div>
         </div>
 
-        {selectedType && (
-          <div>
-            <span className={`folder-chip ${selectedType.color}`}>
-              {selectedType.color.toUpperCase()} FOLDER · Filing Code {selectedType.filingCode}
-            </span>
-          </div>
-        )}
+        <div className="field">
+          <label>
+            Client <span className="req">*</span>
+          </label>
+          <select
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            disabled={loadingClients || saving}
+            required
+          >
+            {loadingClients ? (
+              <option value="">Loading clients…</option>
+            ) : (
+              allClients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.phone ? `(${c.phone})` : ""}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
 
         <div className="field">
           <label>
@@ -177,22 +198,13 @@ export default function EditCaseModal({
           />
         </div>
 
-        <div className="field-row-3">
+        <div className="field-row">
           <div className="field">
             <label>Our Reference</label>
             <input
               placeholder="Internal reference"
               value={ourRef}
               onChange={(e) => setOurRef(e.target.value)}
-              disabled={saving}
-            />
-          </div>
-          <div className="field">
-            <label>Opening Date</label>
-            <input
-              type="date"
-              value={openingDate}
-              onChange={(e) => setOpeningDate(e.target.value)}
               disabled={saving}
             />
           </div>
@@ -220,7 +232,7 @@ export default function EditCaseModal({
           />
         </div>
 
-        {caseTypeCode === "PI" && (
+        {caseRecord.caseTypeCode === "PI" && (
           <div style={{ background: "var(--surface-2)", padding: 12, borderRadius: 10 }}>
             <div className="section-hint" style={{ marginTop: 0, marginBottom: 8, fontWeight: 600 }}>
               Personal Injury – Specific Fields
