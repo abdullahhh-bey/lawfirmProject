@@ -57,6 +57,17 @@ public class MessagingService : IMessagingService
 
     public async Task<MessageDto> SendMessageAsync(SendMessageDto dto, Guid senderId)
     {
+        // If an advocate passes Guid.Empty for admin, resolve to the active admin user:
+        if (dto.RecipientIds.Contains(Guid.Empty))
+        {
+            dto.RecipientIds.RemoveAll(id => id == Guid.Empty);
+            var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "admin" && u.IsActive);
+            if (adminUser != null && !dto.RecipientIds.Contains(adminUser.Id))
+            {
+                dto.RecipientIds.Add(adminUser.Id);
+            }
+        }
+
         if (!dto.RecipientIds.Any()) throw new ArgumentException("Select at least one recipient.");
         if (string.IsNullOrWhiteSpace(dto.Text) && (string.IsNullOrWhiteSpace(dto.AttachmentsJson) || dto.AttachmentsJson == "[]"))
         {
@@ -159,20 +170,71 @@ public class MessagingService : IMessagingService
 
     public async Task<List<RecipientDto>> GetRecipientsAsync(Guid currentUserId, string role)
     {
-        var users = await _context.Users
+        if (role == "admin")
+        {
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(u => u.IsActive && u.Id != currentUserId)
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+
+            return users.Select(u => new RecipientDto
+            {
+                Id = u.Id,
+                Name = u.FullName,
+                Email = u.Email,
+                Role = u.Role,
+                Phone = u.Phone
+            }).ToList();
+        }
+
+        // Advocate view: Admin + Co-assigned fellow case mates ONLY
+        var adminUser = await _context.Users
             .AsNoTracking()
-            .Where(u => u.IsActive && u.Id != currentUserId)
-            .OrderBy(u => u.Role == "admin" ? 0 : 1)
-            .ThenBy(u => u.FullName)
+            .Where(u => u.IsActive && u.Role == "admin")
+            .FirstOrDefaultAsync();
+
+        var sharedCaseIds = await _context.Cases
+            .Where(c => c.AssignedLawyers.Any(l => l.Id == currentUserId))
+            .Select(c => c.Id)
             .ToListAsync();
 
-        return users.Select(u => new RecipientDto
+        var fellowLawyerIds = await _context.Cases
+            .Where(c => sharedCaseIds.Contains(c.Id))
+            .SelectMany(c => c.AssignedLawyers)
+            .Where(l => l.Id != currentUserId && l.IsActive)
+            .Select(l => l.Id)
+            .Distinct()
+            .ToListAsync();
+
+        var fellowLawyers = await _context.Users
+            .AsNoTracking()
+            .Where(u => fellowLawyerIds.Contains(u.Id))
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
+
+        var result = new List<RecipientDto>();
+        if (adminUser != null)
+        {
+            result.Add(new RecipientDto
+            {
+                Id = adminUser.Id,
+                Name = !string.IsNullOrWhiteSpace(adminUser.FullName) ? $"{adminUser.FullName} (Admin)" : "Admin",
+                Email = adminUser.Email,
+                Role = "admin",
+                Phone = adminUser.Phone
+            });
+        }
+
+        result.AddRange(fellowLawyers.Select(u => new RecipientDto
         {
             Id = u.Id,
-            Name = u.Role == "admin" ? $"{u.FullName} (Admin)" : u.FullName,
+            Name = u.FullName,
             Email = u.Email,
             Role = u.Role,
             Phone = u.Phone
-        }).ToList();
+        }));
+
+        return result;
     }
 }

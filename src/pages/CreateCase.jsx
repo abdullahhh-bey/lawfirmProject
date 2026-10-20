@@ -90,6 +90,29 @@ export default function CreateCase() {
       const created = res?.case || res;
 
       const taskErrors = [];
+
+      function getPendingFiles(nodes) {
+        const list = [];
+        for (const n of nodes || []) {
+          if (n.kind === "file" && (n.rawFile || n.file)) {
+            list.push(n);
+          }
+          if (Array.isArray(n.children)) {
+            list.push(...getPendingFiles(n.children));
+          }
+        }
+        return list;
+      }
+
+      const pendingDocFiles = getPendingFiles(documents);
+      for (const docFile of pendingDocFiles) {
+        try {
+          await casesApi.uploadDocument(created.id, docFile.rawFile || docFile.file, docFile.parentId || null);
+        } catch (error) {
+          taskErrors.push(`Document ${docFile.name}: ${error.message}`);
+        }
+      }
+
       for (const task of draftTasks) {
         try {
           await tasksApi.create({ ...task, caseId: created.id });
@@ -100,7 +123,7 @@ export default function CreateCase() {
 
       if (taskErrors.length) {
         showToast(
-          `Case created, but some tasks or attachments failed: ${taskErrors.join("; ")}`,
+          `Case created, but some attachments failed: ${taskErrors.join("; ")}`,
           "error",
         );
       } else {

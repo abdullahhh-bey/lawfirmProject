@@ -75,20 +75,30 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 
 // LAYER 1: DATABASE CONTEXT & TLS/SSL IN-TRANSIT SECURITY
 // Enforces SSL Mode=Require on the PostgreSQL connection
-var connectionString =
+var rawConnectionString =
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? builder.Configuration["DATABASE_URL"]
     ?? throw new InvalidOperationException("Database connection string missing");
+
+// Neon Serverless & PgBouncer connection resilience tuning:
+// Prevents 10054 (forcibly closed by remote host) and SSL EOF errors caused by stale pool connections
+var connBuilder = new Npgsql.NpgsqlConnectionStringBuilder(rawConnectionString);
+connBuilder.KeepAlive = 15; // Send TCP keepalive every 15s so Neon/PgBouncer doesn't silently terminate idle sockets
+connBuilder.ConnectionIdleLifetime = 15; // Evict idle connections after 15s before they become stale
+connBuilder.ConnectionPruningInterval = 10; // Prune dead/idle sockets every 10s
+connBuilder.Timeout = 15; // Connection timeout in seconds
+
+var connectionString = connBuilder.ConnectionString;
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
-        npgsqlOptions.CommandTimeout(120);
+        npgsqlOptions.CommandTimeout(60);
         npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
         npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(3),
             errorCodesToAdd: null);
     });
 });

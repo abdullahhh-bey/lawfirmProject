@@ -91,13 +91,29 @@ public class DocumentsController : ControllerBase
 
         if (fileNode == null) return NotFound(new { message = "Document not found." });
 
-        var storagePath = fileNode.GetValueOrDefault("storagePath")?.ToString();
-        var fileName = fileNode.GetValueOrDefault("name")?.ToString() ?? "document";
-        var mimeType = fileNode.GetValueOrDefault("mimeType")?.ToString() ?? "application/octet-stream";
+        var storagePath = GetProperty(fileNode, "storagePath", "storage_path", "path", "StoragePath");
+        var fileName = GetProperty(fileNode, "name", "fileName", "Name") ?? "document";
+        var mimeType = GetProperty(fileNode, "mimeType", "type", "ContentType") ?? "application/octet-stream";
 
         if (string.IsNullOrEmpty(storagePath))
         {
-            return BadRequest(new { message = "Document storage path is missing." });
+            var dataUrl = GetProperty(fileNode, "dataUrl", "url");
+            if (!string.IsNullOrEmpty(dataUrl) && dataUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            {
+                var commaIdx = dataUrl.IndexOf(',');
+                if (commaIdx >= 0)
+                {
+                    try
+                    {
+                        var base64 = dataUrl[(commaIdx + 1)..];
+                        var bytes = Convert.FromBase64String(base64);
+                        return File(new MemoryStream(bytes), mimeType, fileName);
+                    }
+                    catch { /* fallback to error below */ }
+                }
+            }
+
+            return BadRequest(new { message = "This file does not have an active cloud storage record. Please re-upload the document to the case." });
         }
 
         if (redirect)
@@ -107,9 +123,36 @@ public class DocumentsController : ControllerBase
             return Redirect(signedUrl);
         }
 
-        // Stream and decrypt file bytes directly to the client.
-        var stream = await _storageService.DownloadFileAsync(storagePath);
-        return File(stream, mimeType, fileName);
+        try
+        {
+            // Stream and decrypt file bytes directly to the client.
+            var stream = await _storageService.DownloadFileAsync(storagePath);
+            return File(stream, mimeType, fileName);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Could not download file from storage: {ex.Message}. Please check your connection or contact the administrator." });
+        }
+    }
+
+    private static string? GetProperty(Dictionary<string, object> node, params string[] candidateNames)
+    {
+        foreach (var name in candidateNames)
+        {
+            foreach (var kvp in node)
+            {
+                if (string.Equals(kvp.Key, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (kvp.Value is JsonElement je)
+                    {
+                        if (je.ValueKind == JsonValueKind.String) return je.GetString();
+                        return je.ToString();
+                    }
+                    return kvp.Value?.ToString();
+                }
+            }
+        }
+        return null;
     }
 
     [HttpDelete("{fileId}")]
@@ -156,7 +199,8 @@ public class DocumentsController : ControllerBase
     {
         foreach (var node in nodes)
         {
-            if (node.GetValueOrDefault("id")?.ToString() == nodeId)
+            var id = GetProperty(node, "id", "Id");
+            if (string.Equals(id, nodeId, StringComparison.OrdinalIgnoreCase))
                 return node;
 
             var found = FindNode(GetChildren(node), nodeId);

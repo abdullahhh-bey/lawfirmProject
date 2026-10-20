@@ -192,7 +192,7 @@ export default function LawyerCaseView() {
             <button
               type="button"
               className="btn btn-ghost"
-              onClick={() => setMessageTarget({ id: null, name: "Admin", role: "admin" })}
+              onClick={() => setMessageTarget({ id: "admin", name: "Admin", role: "admin" })}
               title="Send a portal message to Admin regarding this case"
             >
               💬 Message Admin

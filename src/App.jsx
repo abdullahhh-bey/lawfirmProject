@@ -113,12 +113,16 @@ export default function App() {
         }
       />
       <Route
-        path="/lawyers"
+        path="/advocates"
         element={
           <ProtectedRoute role="admin">
             <LawyersPage />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/lawyers"
+        element={<Navigate to="/advocates" replace />}
       />
       <Route
         path="/messaging"

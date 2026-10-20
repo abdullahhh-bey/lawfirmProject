@@ -110,11 +110,25 @@ public class SecurityEncryptionService : ISecurityEncryptionService
 
         var plainBytes = new byte[cipherText.Length];
 
-        using (var aesGcm = new AesGcm(_key, 16))
+        try
         {
-            aesGcm.Decrypt(nonce, cipherText, tag, plainBytes);
-        }
+            using (var aesGcm = new AesGcm(_key, 16))
+            {
+                aesGcm.Decrypt(nonce, cipherText, tag, plainBytes);
+            }
 
-        return plainBytes;
+            return plainBytes;
+        }
+        catch (CryptographicException)
+        {
+            // If the file was not encrypted with this key or is an unencrypted PDF/document,
+            // fallback gracefully to the original bytes so the file is not blocked or corrupted.
+            return cipherBytes;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to decrypt bytes with AES-GCM; falling back to original payload.");
+            return cipherBytes;
+        }
     }
 }

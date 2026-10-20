@@ -144,6 +144,8 @@ export default function DocumentManager({
         name: a.name,
         mimeType: a.type,
         size: a.size,
+        rawFile: a.rawFile || a.file,
+        dataUrl: a.dataUrl,
         createdAt: new Date().toISOString(),
       }));
       onChange?.(
@@ -182,6 +184,7 @@ export default function DocumentManager({
     e?.stopPropagation();
     if (downloadingFileId) return;
     setDownloadingFileId(file.id);
+    setErr("");
 
     try {
       if (caseId && file.id && !file.dataUrl && !file.url) {
@@ -194,7 +197,12 @@ export default function DocumentManager({
         );
 
         if (!res.ok) {
-          setErr("This file could not be downloaded.");
+          let errDetail = "Could not download file. Please check your internet connection or try again.";
+          try {
+            const data = await res.json();
+            if (data?.message) errDetail = data.message;
+          } catch {}
+          setErr(errDetail);
           return;
         }
 
@@ -213,7 +221,10 @@ export default function DocumentManager({
       }
 
       const targetUrl = file.dataUrl || file.url;
-      if (!targetUrl) return;
+      if (!targetUrl) {
+        setErr("This file has no stored cloud record. Please re-upload the document.");
+        return;
+      }
       const a = document.createElement("a");
       a.href = targetUrl;
       a.download = file.name || "document";
@@ -223,7 +234,7 @@ export default function DocumentManager({
       a.click();
       document.body.removeChild(a);
     } catch (error) {
-      setErr(error.message || "This file could not be downloaded.");
+      setErr(error.message || "Could not download file. Please check your internet connection and try again.");
     } finally {
       setDownloadingFileId(null);
     }

@@ -149,7 +149,7 @@ export default function Sidebar() {
           <div className="nav-group">
             <div className="nav-label">Team</div>
             <NavLink
-              to="/lawyers"
+              to="/advocates"
               className={({ isActive }) =>
                 `nav-link${isActive ? " active" : ""}`
               }
