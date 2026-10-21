@@ -14,11 +14,16 @@ public class MessagingController : ControllerBase
 {
     private readonly IMessagingService _messagingService;
     private readonly IStorageService _storageService;
+    private readonly lawfirm.backend.Data.AppDbContext _context;
 
-    public MessagingController(IMessagingService messagingService, IStorageService storageService)
+    public MessagingController(
+        IMessagingService messagingService,
+        IStorageService storageService,
+        lawfirm.backend.Data.AppDbContext context)
     {
         _messagingService = messagingService;
         _storageService = storageService;
+        _context = context;
     }
 
     private Guid CurrentUserId
@@ -27,11 +32,24 @@ public class MessagingController : ControllerBase
         {
             var claimStr = User.FindFirstValue(ClaimTypes.NameIdentifier)
                         ?? User.FindFirstValue("sub")
-                        ?? User.FindFirstValue("id");
-            return Guid.TryParse(claimStr, out var id) ? id : Guid.Empty;
+                        ?? User.FindFirstValue("id")
+                        ?? User.Claims.FirstOrDefault(c => c.Type.EndsWith("nameidentifier", StringComparison.OrdinalIgnoreCase))?.Value;
+            if (Guid.TryParse(claimStr, out var id) && id != Guid.Empty)
+            {
+                return id;
+            }
+
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = _context.Users.FirstOrDefault(u => u.Email.ToLower() == email.ToLower());
+                if (user != null) return user.Id;
+            }
+
+            return Guid.Empty;
         }
     }
-    private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role) ?? "lawyer";
+    private string CurrentUserRole => User.FindFirstValue(ClaimTypes.Role)?.ToLower() ?? "lawyer";
 
     [HttpGet]
     public async Task<ActionResult<List<MessageDto>>> GetMessages()
@@ -49,6 +67,14 @@ public class MessagingController : ControllerBase
             return Ok(message);
         }
         catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }

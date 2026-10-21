@@ -23,10 +23,10 @@ public class MessagingService : IMessagingService
             .Include(m => m.Recipients)
                 .ThenInclude(r => r.Recipient);
 
-        if (role != "admin")
-        {
-            query = query.Where(m => m.Recipients.Any(r => r.RecipientId == currentUserId) || m.SenderId == currentUserId);
-        }
+        // Strict Privacy: Users (both Admin and Advocates) ONLY see messages
+        // where they are either the sender OR an explicitly addressed recipient.
+        // Private messages between co-advocates will NOT appear in the Admin portal.
+        query = query.Where(m => m.Recipients.Any(r => r.RecipientId == currentUserId) || m.SenderId == currentUserId);
 
         var messages = await query.OrderByDescending(m => m.CreatedAt).ToListAsync();
 
@@ -36,20 +36,22 @@ public class MessagingService : IMessagingService
             SenderId = m.SenderId,
             SenderName = !string.IsNullOrWhiteSpace(m.Sender?.FullName)
                 ? m.Sender.FullName
-                : (m.Sender?.Role == "admin" ? "Admin" : "Advocate"),
-            SenderRole = m.Sender?.Role ?? (m.SenderId == currentUserId && role == "admin" ? "admin" : "lawyer"),
+                : (m.Sender?.Role?.ToLower() == "admin" ? "Admin" : "Advocate"),
+            SenderRole = m.Sender?.Role?.ToLower() ?? (m.SenderId == currentUserId && role == "admin" ? "admin" : "lawyer"),
             Type = m.Type,
             Text = m.Text,
             AttachmentsJson = m.AttachmentsJson,
             CreatedAt = m.CreatedAt,
-            RecipientStatus = m.Recipients.ToDictionary(r => r.RecipientId, r => r.Status),
+            RecipientStatus = m.Recipients
+                .GroupBy(r => r.RecipientId)
+                .ToDictionary(g => g.Key, g => g.First().Status),
             Recipients = m.Recipients.Select(r => new MessageRecipientDto
             {
                 RecipientId = r.RecipientId,
                 RecipientName = !string.IsNullOrWhiteSpace(r.Recipient?.FullName)
                     ? r.Recipient.FullName
-                    : (r.Recipient?.Role == "admin" ? "Admin" : "Advocate"),
-                RecipientRole = r.Recipient?.Role ?? "lawyer",
+                    : (r.Recipient?.Role?.ToLower() == "admin" ? "Admin" : "Advocate"),
+                RecipientRole = r.Recipient?.Role?.ToLower() ?? "lawyer",
                 Status = r.Status
             }).ToList()
         }).ToList();
@@ -57,18 +59,47 @@ public class MessagingService : IMessagingService
 
     public async Task<MessageDto> SendMessageAsync(SendMessageDto dto, Guid senderId)
     {
-        // If an advocate passes Guid.Empty for admin, resolve to the active admin user:
-        if (dto.RecipientIds.Contains(Guid.Empty))
+        if (senderId == Guid.Empty)
         {
-            dto.RecipientIds.RemoveAll(id => id == Guid.Empty);
-            var adminUser = await _context.Users.FirstOrDefaultAsync(u => u.Role == "admin" && u.IsActive);
-            if (adminUser != null && !dto.RecipientIds.Contains(adminUser.Id))
+            throw new UnauthorizedAccessException("Sender session is invalid or expired. Please sign in again.");
+        }
+
+        // Robust admin lookup: case-insensitive role match, active or inactive fallback, email fallback
+        var adminUser = await _context.Users
+            .FirstOrDefaultAsync(u => (u.Role.ToLower() == "admin" || u.Role.ToLower().Contains("admin")) && u.IsActive)
+            ?? await _context.Users
+            .FirstOrDefaultAsync(u => u.Role.ToLower() == "admin" || u.Role.ToLower().Contains("admin"))
+            ?? await _context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower().Contains("admin"));
+
+        // If an advocate passes Guid.Empty for admin, resolve to the admin user:
+        var cleanRecipientIds = (dto.RecipientIds ?? new List<Guid>()).Distinct().ToList();
+        if (cleanRecipientIds.Contains(Guid.Empty) || !cleanRecipientIds.Any())
+        {
+            cleanRecipientIds.RemoveAll(id => id == Guid.Empty);
+            if (adminUser != null && !cleanRecipientIds.Contains(adminUser.Id))
             {
-                dto.RecipientIds.Add(adminUser.Id);
+                cleanRecipientIds.Add(adminUser.Id);
             }
         }
 
-        if (!dto.RecipientIds.Any()) throw new ArgumentException("Select at least one recipient.");
+        // Validate recipient IDs against Users table to prevent FK constraint violations
+        var validUserIds = await _context.Users
+            .Where(u => cleanRecipientIds.Contains(u.Id))
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        // If no valid users matched but admin exists, route to admin as safe fallback
+        if (!validUserIds.Any() && adminUser != null)
+        {
+            validUserIds.Add(adminUser.Id);
+        }
+
+        if (!validUserIds.Any())
+        {
+            throw new ArgumentException("Select at least one valid recipient.");
+        }
+
         if (string.IsNullOrWhiteSpace(dto.Text) && (string.IsNullOrWhiteSpace(dto.AttachmentsJson) || dto.AttachmentsJson == "[]"))
         {
             throw new ArgumentException("Write a message or attach a file before sending.");
@@ -78,20 +109,20 @@ public class MessagingService : IMessagingService
         {
             Id = Guid.NewGuid(),
             SenderId = senderId,
-            Type = dto.RecipientIds.Count > 1 ? "broadcast" : "individual",
+            Type = validUserIds.Count > 1 ? "broadcast" : "individual",
             Text = dto.Text.Trim(),
             AttachmentsJson = dto.AttachmentsJson ?? "[]",
             CreatedAt = DateTime.UtcNow
         };
 
-        foreach (var recipientId in dto.RecipientIds)
+        foreach (var recipientId in validUserIds)
         {
             message.Recipients.Add(new MessageRecipient
             {
                 Id = Guid.NewGuid(),
                 MessageId = message.Id,
                 RecipientId = recipientId,
-                Status = "Delivered", // Mock WhatsApp / push delivery status
+                Status = "Delivered", // Mock delivery status
                 UpdatedAt = DateTime.UtcNow
             });
         }
@@ -99,7 +130,44 @@ public class MessagingService : IMessagingService
         _context.Messages.Add(message);
         await _context.SaveChangesAsync();
 
-        return (await GetMessagesAsync(senderId, "admin")).First(m => m.Id == message.Id);
+        // Fetch specifically this created message rather than querying the entire database table
+        var created = await _context.Messages
+            .AsNoTracking()
+            .Include(m => m.Sender)
+            .Include(m => m.Recipients)
+                .ThenInclude(r => r.Recipient)
+            .FirstOrDefaultAsync(m => m.Id == message.Id);
+
+        if (created == null)
+        {
+            throw new InvalidOperationException("Failed to retrieve the sent message.");
+        }
+
+        return new MessageDto
+        {
+            Id = created.Id,
+            SenderId = created.SenderId,
+            SenderName = !string.IsNullOrWhiteSpace(created.Sender?.FullName)
+                ? created.Sender.FullName
+                : (created.Sender?.Role?.ToLower() == "admin" ? "Admin" : "Advocate"),
+            SenderRole = created.Sender?.Role?.ToLower() ?? "lawyer",
+            Type = created.Type,
+            Text = created.Text,
+            AttachmentsJson = created.AttachmentsJson,
+            CreatedAt = created.CreatedAt,
+            RecipientStatus = created.Recipients
+                .GroupBy(r => r.RecipientId)
+                .ToDictionary(g => g.Key, g => g.First().Status),
+            Recipients = created.Recipients.Select(r => new MessageRecipientDto
+            {
+                RecipientId = r.RecipientId,
+                RecipientName = !string.IsNullOrWhiteSpace(r.Recipient?.FullName)
+                    ? r.Recipient.FullName
+                    : (r.Recipient?.Role?.ToLower() == "admin" ? "Admin" : "Advocate"),
+                RecipientRole = r.Recipient?.Role?.ToLower() ?? "lawyer",
+                Status = r.Status
+            }).ToList()
+        };
     }
 
     public async Task<MessageDto> SetMessageAttachmentsAsync(Guid messageId, string attachmentsJson, Guid currentUserId, string role)
@@ -191,7 +259,15 @@ public class MessagingService : IMessagingService
         // Advocate view: Admin + Co-assigned fellow case mates ONLY
         var adminUser = await _context.Users
             .AsNoTracking()
-            .Where(u => u.IsActive && u.Role == "admin")
+            .Where(u => (u.Role.ToLower() == "admin" || u.Role.ToLower().Contains("admin")) && u.IsActive)
+            .FirstOrDefaultAsync()
+            ?? await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Role.ToLower() == "admin" || u.Role.ToLower().Contains("admin"))
+            .FirstOrDefaultAsync()
+            ?? await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Email.ToLower().Contains("admin"))
             .FirstOrDefaultAsync();
 
         var sharedCaseIds = await _context.Cases

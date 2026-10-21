@@ -236,36 +236,43 @@ export default function LawyerCaseView() {
               <Row label="Client Address" value={client?.address} />
               <Row label="Opening Date" value={caseRecord.openingDate} />
               <Row label="Notes" value={caseRecord.notes} />
-              {((caseRecord.assignedLawyerIds || []).filter(
-                (lawId) => (lawId || "").toLowerCase() !== (session?.id || "").toLowerCase()
-              )).length > 0 && (
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
-                    Co-Advocate Team
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {((caseRecord.assignedLawyerIds || []).filter(
-                      (lawId) => (lawId || "").toLowerCase() !== (session?.id || "").toLowerCase()
-                    )).map((lawId) => {
-                      const originalIdx = (caseRecord.assignedLawyerIds || []).indexOf(lawId);
-                      const name = (caseRecord.assignedLawyerNames || [])[originalIdx] || lawyerName(lawId) || "Co-Advocate";
-                      return (
-                        <button
-                          key={lawId}
-                          type="button"
-                          className="chip"
-                          onClick={() => setMessageTarget({ id: lawId, name, role: "lawyer" })}
-                          style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
-                          title={`Click to send message and share files with ${name}`}
-                        >
-                          <span>⚖️ {name}</span>
-                          <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>💬 Message</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
+                  Case Communications & File Sharing
                 </div>
-              )}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    type="button"
+                    className="chip"
+                    onClick={() => setMessageTarget({ id: "admin", name: "Admin", role: "admin" })}
+                    style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface-2)", border: "1px solid var(--line)" }}
+                    title="Send a confidential portal message or share files with Admin regarding this case"
+                  >
+                    <span>👔 Admin (Management)</span>
+                    <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>💬 Message</span>
+                  </button>
+
+                  {((caseRecord.assignedLawyerIds || []).filter(
+                    (lawId) => (lawId || "").toLowerCase() !== (session?.id || "").toLowerCase()
+                  )).map((lawId) => {
+                    const originalIdx = (caseRecord.assignedLawyerIds || []).indexOf(lawId);
+                    const name = (caseRecord.assignedLawyerNames || [])[originalIdx] || lawyerName(lawId) || "Co-Advocate";
+                    return (
+                      <button
+                        key={lawId}
+                        type="button"
+                        className="chip"
+                        onClick={() => setMessageTarget({ id: lawId, name, role: "lawyer" })}
+                        style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                        title={`Click to send message and share files with ${name}`}
+                      >
+                        <span>⚖️ {name}</span>
+                        <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700 }}>💬 Message</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <div
               style={{
@@ -357,10 +364,10 @@ export default function LawyerCaseView() {
 
       {messageTarget && (
         <MessageComposer
-          recipient={messageTarget.id ? messageTarget : undefined}
+          recipient={messageTarget}
           portalOnly={true}
           onClose={() => setMessageTarget(null)}
-          onSent={() => showToast(`Message sent to ${messageTarget.name}.`)}
+          onSent={() => showToast(`Message sent to ${messageTarget.name || "recipient"}.`)}
         />
       )}
     </>

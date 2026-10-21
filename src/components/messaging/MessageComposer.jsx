@@ -17,12 +17,14 @@ export default function MessageComposer({
 }) {
   const { session } = useApp();
   const isSenderLawyer = (session?.role || "").toLowerCase() === "lawyer";
-  const initialTarget = recipient || lawyer || null;
+  const defaultAdmin = { id: "admin", name: "Admin", role: "admin" };
+  const initialTarget = recipient || lawyer || (isSenderLawyer ? defaultAdmin : null);
 
   const [availableRecipients, setAvailableRecipients] = useState(providedRecipients || []);
   const [loadingRecipients, setLoadingRecipients] = useState(!initialTarget && (!providedRecipients || providedRecipients.length === 0));
   const [selectedRecipientId, setSelectedRecipientId] = useState(initialTarget?.id || "");
   const [selectedRecipient, setSelectedRecipient] = useState(initialTarget);
+  const [adminGuid, setAdminGuid] = useState(null);
 
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
@@ -38,28 +40,31 @@ export default function MessageComposer({
 
   useEffect(() => {
     let active = true;
-    if (!initialTarget && (!providedRecipients || providedRecipients.length === 0)) {
-      setLoadingRecipients(true);
-      messaging.getRecipients().then((list) => {
-        if (!active) return;
-        setAvailableRecipients(list || []);
-        if (list && list.length > 0 && !selectedRecipientId) {
+    // Always attempt to discover admin's exact database GUID in background
+    messaging.getRecipients().then((list) => {
+      if (!active || !list) return;
+      const adminItem = list.find((r) => r.role?.toLowerCase() === "admin" || (r.name || "").includes("Admin"));
+      if (adminItem?.id) {
+        setAdminGuid(adminItem.id);
+      }
+      if (!initialTarget && (!providedRecipients || providedRecipients.length === 0)) {
+        setAvailableRecipients(list);
+        if (list.length > 0 && !selectedRecipientId) {
           setSelectedRecipientId(list[0].id);
           setSelectedRecipient(list[0]);
           setPhone(list[0].phone || "");
         }
-      }).catch(() => {
-        // Fallback: If loading fails or user is offline, at least allow messaging Admin
-        if (active && isSenderLawyer) {
-          const fallbackAdmin = { id: EMPTY_GUID, name: "Admin", role: "admin" };
-          setAvailableRecipients([fallbackAdmin]);
-          setSelectedRecipientId(EMPTY_GUID);
-          setSelectedRecipient(fallbackAdmin);
-        }
-      }).finally(() => {
-        if (active) setLoadingRecipients(false);
-      });
-    }
+      }
+    }).catch(() => {
+      // Fallback: If loading fails or offline, default to Admin
+      if (active && isSenderLawyer && !initialTarget) {
+        setAvailableRecipients([defaultAdmin]);
+        setSelectedRecipientId("admin");
+        setSelectedRecipient(defaultAdmin);
+      }
+    }).finally(() => {
+      if (active) setLoadingRecipients(false);
+    });
     return () => { active = false; };
   }, [initialTarget, providedRecipients, isSenderLawyer, selectedRecipientId]);
 
@@ -88,7 +93,7 @@ export default function MessageComposer({
     // Resolve effective target ID
     let targetId = targetRecipient?.id;
     if (!targetId || targetId === "admin" || targetRecipient?.role === "admin" || targetRecipient?.name === "Admin") {
-      targetId = EMPTY_GUID; // Backend maps EMPTY_GUID to the active Admin user
+      targetId = adminGuid || EMPTY_GUID; // If adminGuid is discovered, use it; otherwise backend maps EMPTY_GUID
     }
 
     if (!targetRecipient && !targetId) {

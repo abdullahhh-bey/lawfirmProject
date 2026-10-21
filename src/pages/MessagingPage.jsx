@@ -52,10 +52,23 @@ export default function MessagingPage() {
 
   // Determine if a message was sent by an advocate to admin
   function isReceivedFromAdvocate(m) {
-    if (m.senderRole === "lawyer") return true;
     if (session?.id && (m.senderId || "").toLowerCase() === session.id.toLowerCase()) return false;
     if (m.senderName === "Admin") return false;
-    // If sender matches a lawyer in our list
+
+    // Must be sent to Admin (or Admin in recipients list)
+    if (m.recipients && m.recipients.length > 0) {
+      const isTargetedToAdmin = m.recipients.some(
+        (r) =>
+          (session?.id && (r.recipientId || "").toLowerCase() === session.id.toLowerCase()) ||
+          (r.recipientRole || "").toLowerCase() === "admin" ||
+          (r.recipientName || "").toLowerCase() === "admin"
+      );
+      if (!isTargetedToAdmin) {
+        return false; // Private advocate-to-advocate message, ignore for Admin
+      }
+    }
+
+    if (m.senderRole === "lawyer") return true;
     if (lawyers.some((l) => (l.id || "").toLowerCase() === (m.senderId || "").toLowerCase())) {
       return true;
     }

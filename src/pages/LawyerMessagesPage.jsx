@@ -67,7 +67,7 @@ export default function LawyerMessagesPage() {
   }
 
   function handleNewMessage() {
-    setTargetRecipient(null);
+    setTargetRecipient({ id: "admin", name: "Admin", role: "admin" });
     setComposerOpen(true);
   }
 
