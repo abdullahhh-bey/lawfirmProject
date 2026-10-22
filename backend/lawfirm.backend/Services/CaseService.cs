@@ -134,6 +134,14 @@ public class CaseService : ICaseService
                 .Where(u => dto.AssignedLawyerIds.Contains(u.Id) && u.IsActive)
                 .ToListAsync();
             foreach (var l in lawyers) caseRecord.AssignedLawyers.Add(l);
+
+            try
+            {
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(caseRecord.PiFieldsJson) ?? new();
+                dict["assignedAt"] = DateTime.UtcNow.ToString("o");
+                caseRecord.PiFieldsJson = System.Text.Json.JsonSerializer.Serialize(dict);
+            }
+            catch {}
         }
 
         _context.Cases.Add(caseRecord);
@@ -278,6 +286,14 @@ public class CaseService : ICaseService
             foreach (var l in lawyers) caseRecord.AssignedLawyers.Add(l);
 
             if (caseRecord.Status == "Unassigned") caseRecord.Status = "Assigned";
+
+            try
+            {
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(caseRecord.PiFieldsJson) ?? new();
+                dict["assignedAt"] = DateTime.UtcNow.ToString("o");
+                caseRecord.PiFieldsJson = System.Text.Json.JsonSerializer.Serialize(dict);
+            }
+            catch {}
         }
         else
         {
@@ -311,6 +327,20 @@ public class CaseService : ICaseService
 
         caseRecord.Status = status;
         caseRecord.UpdatedAt = DateTime.UtcNow;
+
+        if (status == "In Process")
+        {
+            try
+            {
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(caseRecord.PiFieldsJson) ?? new();
+                if (!dict.ContainsKey("startedWorkingAt"))
+                {
+                    dict["startedWorkingAt"] = DateTime.UtcNow.ToString("o");
+                    caseRecord.PiFieldsJson = System.Text.Json.JsonSerializer.Serialize(dict);
+                }
+            }
+            catch {}
+        }
 
         if (status is "Archived" or "Completed")
         {

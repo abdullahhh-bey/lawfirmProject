@@ -9,6 +9,7 @@ import {
   lawyers as lawyersApi,
 } from "../lib/api.js";
 import { caseTypeByCode, CASE_STATUSES } from "../data/nomenclature.js";
+import { formatDateOnly } from "../lib/dateUtils.js";
 
 export default function CasesPage() {
   const nav = useNavigate();
@@ -512,8 +513,8 @@ export default function CasesPage() {
                       )}
                     </td>
 
-                    <td className="mono" style={{ padding: "14px 16px", fontSize: 12.5, color: "var(--text-muted)" }}>
-                      {c.openingDate ? String(c.openingDate).slice(0, 10) : "—"}
+                    <td style={{ padding: "14px 16px", fontSize: 12.5, color: "var(--text-muted)" }}>
+                      {formatDateOnly(c.openingDate)}
                     </td>
 
                     <td style={{ padding: "14px 16px" }}>

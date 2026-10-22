@@ -219,10 +219,19 @@ function transformCase(c) {
   } catch {
     piFields = {};
   }
+
+  const hasAssignedLawyers = Array.isArray(c.assignedLawyerIds) && c.assignedLawyerIds.length > 0;
+  const assignedAt = piFields.assignedAt || (hasAssignedLawyers ? c.createdAt : null);
+  const startedWorkingAt = piFields.startedWorkingAt || (c.status === 'In Process' || c.status === 'Completed' ? c.updatedAt : null);
+
   return {
     ...c,
+    openingDate: c.openingDate ? String(c.openingDate).slice(0, 10) : '',
+    closingDate: c.closingDate ? String(c.closingDate).slice(0, 10) : null,
     documents,
     piFields,
+    assignedAt,
+    startedWorkingAt,
   };
 }
 

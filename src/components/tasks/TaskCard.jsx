@@ -5,6 +5,7 @@ import AttachmentInput from "../ui/AttachmentInput.jsx";
 import AttachmentList from "../ui/AttachmentList.jsx";
 import { tasks as tasksApi } from "../../lib/api.js";
 import { TASK_STATUSES } from "../../data/nomenclature.js";
+import { formatDateOnly } from "../../lib/dateUtils.js";
 
 /**
  * Single Task component reused across:
@@ -171,7 +172,7 @@ export default function TaskCard({
         <div>
           <div className="t-name">{task.name}</div>
           <div className="t-meta">
-            {task.date && <span>📅 {task.date}</span>}
+            {task.date && <span>📅 {formatDateOnly(task.date)}</span>}
             {caseMeta && <span className="mono">{caseMeta.caseId}</span>}
             {caseMeta?.clientName && <span>{caseMeta.clientName}</span>}
           </div>

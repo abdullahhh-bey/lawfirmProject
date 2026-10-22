@@ -63,14 +63,18 @@ public class LawyerService : ILawyerService
 
     public async Task<LawyerDto> UpdateLawyerAsync(Guid id, UpdateLawyerDto dto)
     {
-        var lawyer = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.Role == "lawyer");
+        var lawyer = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.Role.ToLower() == "lawyer");
         if (lawyer == null) throw new KeyNotFoundException("Advocate not found.");
 
         lawyer.FullName = dto.Name;
         lawyer.Email = dto.Email.Trim().ToLower();
         lawyer.Phone = dto.Phone ?? "";
-        if (!string.IsNullOrEmpty(dto.Password))
+        if (!string.IsNullOrWhiteSpace(dto.Password))
         {
+            if (dto.Password.Length < 6)
+            {
+                throw new ArgumentException("Password must be at least 6 characters long.");
+            }
             lawyer.PasswordHash = _authService.HashPassword(dto.Password);
         }
         lawyer.UpdatedAt = DateTime.UtcNow;

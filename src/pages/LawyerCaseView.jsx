@@ -16,6 +16,7 @@ import { useApp } from "../context/AppContext.jsx";
 import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import SubmitProgress from "../components/ui/SubmitProgress.jsx";
 import MessageComposer from "../components/messaging/MessageComposer.jsx";
+import { formatDateOnly, formatDateTime, formatTurnaroundTime } from "../lib/dateUtils.js";
 
 export default function LawyerCaseView() {
   const { id } = useParams();
@@ -234,8 +235,64 @@ export default function LawyerCaseView() {
               <Row label="Matter" value={caseRecord.matter} />
               <Row label="Client Phone" value={client?.phone} />
               <Row label="Client Address" value={client?.address} />
-              <Row label="Opening Date" value={caseRecord.openingDate} />
+              <Row label="Opening Date" value={formatDateOnly(caseRecord.openingDate)} />
               <Row label="Notes" value={caseRecord.notes} />
+
+              {/* Advocate Work Time Tracking */}
+              <div
+                style={{
+                  marginTop: 6,
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  display: "grid",
+                  gap: 8,
+                  fontSize: 12.5,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>
+                    📌 Assigned to Case:
+                  </span>
+                  <span className="mono" style={{ fontWeight: 700, color: "var(--text)" }}>
+                    {formatDateTime(caseRecord.assignedAt || caseRecord.createdAt)}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>
+                    ⏱️ Started Working:
+                  </span>
+                  {caseRecord.startedWorkingAt || caseRecord.status === "In Process" || caseRecord.status === "Completed" ? (
+                    <span className="mono" style={{ fontWeight: 700, color: "#16A34A" }}>
+                      {formatDateTime(caseRecord.startedWorkingAt || caseRecord.updatedAt)}
+                    </span>
+                  ) : (
+                    <span style={{ color: "var(--amber)", fontWeight: 600, fontSize: 11.5 }}>
+                      ⏳ Awaiting you to click "Start Working"
+                    </span>
+                  )}
+                </div>
+
+                {(caseRecord.startedWorkingAt || caseRecord.status === "In Process" || caseRecord.status === "Completed") && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      paddingTop: 6,
+                      borderTop: "1px dashed var(--line)",
+                      fontSize: 11.5,
+                    }}
+                  >
+                    <span style={{ color: "var(--text-muted)" }}>Response Turnaround:</span>
+                    <span className="badge info" style={{ fontWeight: 700 }}>
+                      ⚡ {formatTurnaroundTime(caseRecord.assignedAt || caseRecord.createdAt, caseRecord.startedWorkingAt || caseRecord.updatedAt) || "Prompt response"}
+                    </span>
+                  </div>
+                )}
+              </div>
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
                 <div style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", marginBottom: 8 }}>
                   Case Communications & File Sharing

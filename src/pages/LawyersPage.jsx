@@ -27,6 +27,7 @@ export default function LawyersPage() {
   const [messageTarget, setMessageTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   function reload() {
     setLoading(true);
@@ -42,7 +43,12 @@ export default function LawyersPage() {
 
   function openEdit(lawyer) {
     setEditing(lawyer);
-    setDraft(lawyer ? { ...lawyer } : { ...emptyLawyer });
+    setDraft(
+      lawyer
+        ? { name: lawyer.name, email: lawyer.email, phone: lawyer.phone || "", password: "" }
+        : { ...emptyLawyer, password: "" }
+    );
+    setShowPassword(false);
   }
 
   // Fix: previously only `editing` was cleared, leaving `draft` set so the
@@ -51,20 +57,31 @@ export default function LawyersPage() {
     if (saving) return;
     setEditing(null);
     setDraft(null);
+    setShowPassword(false);
   }
 
   async function save() {
     setSaving(true);
     try {
       if (editing?.id) {
+        if (draft.password && draft.password.length < 6) {
+          showToast("New password must be at least 6 characters long.", "error");
+          setSaving(false);
+          return;
+        }
         const updated = await lawyersApi.update(editing.id, draft);
         setLawyers((prev) =>
           prev.map((l) => (l.id === updated.id ? updated : l)),
         );
-        showToast("Advocate updated.");
+        showToast(draft.password ? "Advocate details & password updated successfully." : "Advocate updated.");
       } else {
         if (!draft.name.trim() || !draft.email.trim()) {
           showToast("Name and email are required.", "error");
+          setSaving(false);
+          return;
+        }
+        if (!draft.password || draft.password.length < 6) {
+          showToast("Password must be at least 6 characters long.", "error");
           setSaving(false);
           return;
         }
@@ -169,25 +186,57 @@ export default function LawyersPage() {
               />
             </div>
           </div>
-          {!editing?.id && (
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label>Temporary Password</label>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>
+              {editing?.id ? "Change Password" : "Password"}{" "}
+              {!editing?.id && <span className="req">*</span>}
+            </label>
+            <div style={{ position: "relative" }}>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 minLength={6}
-                required
-                value={draft.password}
+                required={!editing?.id}
+                placeholder={
+                  editing?.id
+                    ? "Leave blank to keep current password, or enter new password"
+                    : "Enter advocate password (min 6 chars)"
+                }
+                value={draft.password || ""}
                 onChange={(e) =>
                   setDraft({ ...draft, password: e.target.value })
                 }
+                style={{ paddingRight: 40 }}
               />
-              <div className="field-hint">
-                In production this should be a secure, forced-reset invite — not
-                a plain-text default.
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 16,
+                  color: "var(--text-muted)",
+                }}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "👁️" : "🙈"}
+              </button>
             </div>
-          )}
+            {editing?.id ? (
+              <div className="field-hint" style={{ color: "var(--accent)" }}>
+                💡 Enter a new password here if you want to reset or change this advocate's login credentials.
+              </div>
+            ) : (
+              <div className="field-hint">
+                Minimum 6 characters. The advocate will use this to log into their portal.
+              </div>
+            )}
+          </div>
           <div className="modal-actions">
             <button className="btn btn-ghost" onClick={closeModal} disabled={saving}>
               Cancel

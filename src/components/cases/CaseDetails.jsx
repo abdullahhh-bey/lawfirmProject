@@ -4,6 +4,7 @@ import { caseTypeByCode } from "../../data/nomenclature.js";
 import CaseStatus from "./CaseStatus.jsx";
 import MultiLawyerSelector from "../lawyers/MultiLawyerSelector.jsx";
 import DocumentManager from "../documents/DocumentManager.jsx";
+import { formatDateOnly, formatDateTime, formatTurnaroundTime } from "../../lib/dateUtils.js";
 
 export default function CaseDetails({
   caseRecord,
@@ -132,8 +133,8 @@ export default function CaseDetails({
         </div>
         <Row label="Matter" value={caseRecord.matter} />
         <Row label="Our Ref" value={caseRecord.ourRef} />
-        <Row label="Opening Date" value={caseRecord.openingDate} />
-        <Row label="Closing Date" value={caseRecord.closingDate || "—"} />
+        <Row label="Opening Date" value={formatDateOnly(caseRecord.openingDate)} />
+        <Row label="Closing Date" value={caseRecord.closingDate ? formatDateOnly(caseRecord.closingDate) : "—"} />
         <Row
           label="Fee Agreed"
           value={
@@ -173,6 +174,64 @@ export default function CaseDetails({
           onChange={onReassign}
         />
       </div>
+
+      {/* Advocate Assignment & Work Time Tracking */}
+      {(caseRecord.assignedLawyerIds || []).length > 0 && (
+        <div
+          style={{
+            background: "var(--surface-2)",
+            border: "1px solid var(--line)",
+            borderRadius: 10,
+            padding: "12px 14px",
+            marginBottom: 16,
+            display: "grid",
+            gap: 8,
+            fontSize: 12.5,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>
+              📌 Assigned to Advocate:
+            </span>
+            <span className="mono" style={{ fontWeight: 700, color: "var(--text)" }}>
+              {formatDateTime(caseRecord.assignedAt || caseRecord.createdAt)}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ color: "var(--text-muted)", fontWeight: 600 }}>
+              ⏱️ Started Working:
+            </span>
+            {caseRecord.startedWorkingAt || caseRecord.status === "In Process" || caseRecord.status === "Completed" ? (
+              <span className="mono" style={{ fontWeight: 700, color: "#16A34A" }}>
+                {formatDateTime(caseRecord.startedWorkingAt || caseRecord.updatedAt)}
+              </span>
+            ) : (
+              <span style={{ color: "var(--amber)", fontWeight: 600, fontSize: 11.5 }}>
+                ⏳ Awaiting advocate to start
+              </span>
+            )}
+          </div>
+
+          {(caseRecord.startedWorkingAt || caseRecord.status === "In Process" || caseRecord.status === "Completed") && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingTop: 6,
+                borderTop: "1px dashed var(--line)",
+                fontSize: 11.5,
+              }}
+            >
+              <span style={{ color: "var(--text-muted)" }}>Turnaround Time:</span>
+              <span className="badge info" style={{ fontWeight: 700 }}>
+                ⚡ {formatTurnaroundTime(caseRecord.assignedAt || caseRecord.createdAt, caseRecord.startedWorkingAt || caseRecord.updatedAt) || "Prompt response"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="field" style={{ marginBottom: 0 }}>
         <label>Documents</label>
