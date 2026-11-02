@@ -24,7 +24,7 @@ public class CaseService : ICaseService
     private static bool IsClosedCase(string? status) =>
         status is "Completed" or "Archived" or "Cancelled";
 
-    public async Task<List<CaseDto>> GetCasesAsync(Guid currentUserId, string role, int page = 1, int pageSize = 50)
+    public async Task<List<CaseDto>> GetCasesAsync(Guid currentUserId, string role)
     {
         IQueryable<CaseRecord> query = _context.Cases
             .AsNoTracking()
@@ -38,8 +38,6 @@ public class CaseService : ICaseService
 
         var cases = await query
             .OrderByDescending(c => c.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync();
 
         return cases.Select(MapToDto).ToList();

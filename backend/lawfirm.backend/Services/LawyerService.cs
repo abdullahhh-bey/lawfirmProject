@@ -16,14 +16,12 @@ public class LawyerService : ILawyerService
         _authService = authService;
     }
 
-    public async Task<List<LawyerDto>> GetLawyersAsync(int page = 1, int pageSize = 50)
+    public async Task<List<LawyerDto>> GetLawyersAsync()
     {
         var lawyers = await _context.Users
             .AsNoTracking()
             .Where(u => u.Role == "lawyer")
             .OrderBy(u => u.FullName)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync();
 
         return lawyers.Select(MapToDto).ToList();

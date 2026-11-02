@@ -4,7 +4,7 @@ namespace lawfirm.backend.Services;
 
 public interface ILawyerService
 {
-    Task<List<LawyerDto>> GetLawyersAsync(int page = 1, int pageSize = 50);
+    Task<List<LawyerDto>> GetLawyersAsync();
     Task<LawyerDto?> GetLawyerByIdAsync(Guid id);
     Task<LawyerDto> CreateLawyerAsync(CreateLawyerDto dto);
     Task<LawyerDto> UpdateLawyerAsync(Guid id, UpdateLawyerDto dto);

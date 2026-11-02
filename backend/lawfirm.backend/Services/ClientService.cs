@@ -14,14 +14,12 @@ public class ClientService : IClientService
         _context = context;
     }
 
-    public async Task<List<ClientDto>> GetClientsAsync(int page = 1, int pageSize = 50)
+    public async Task<List<ClientDto>> GetClientsAsync()
     {
         var clients = await _context.Clients
             .AsNoTracking()
             .Include(c => c.Cases)
             .OrderBy(c => c.Name)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
             .ToListAsync();
 
         return clients.Select(c => new ClientDto

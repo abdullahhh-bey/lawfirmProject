@@ -4,7 +4,7 @@ namespace lawfirm.backend.Services;
 
 public interface ICaseService
 {
-    Task<List<CaseDto>> GetCasesAsync(Guid currentUserId, string role, int page = 1, int pageSize = 50);
+    Task<List<CaseDto>> GetCasesAsync(Guid currentUserId, string role);
     Task<List<CaseDto>> GetCasesByClientAsync(Guid clientId, Guid currentUserId, string role);
     Task<CaseDto?> GetCaseByIdAsync(Guid caseId, Guid currentUserId, string role);
     Task<CaseDto> CreateCaseAsync(CreateCaseDto dto, Guid currentUserId);
